@@ -83,7 +83,7 @@ public class Server {
                     in.close();
                     out.close();
                     client.close();
-                    System.out.println("...Stopped");
+                    System.out.println("Client closed");
                 } catch (IOException ioe) {
                     System.out.println("cant stoop client");
                 }
