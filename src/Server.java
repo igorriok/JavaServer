@@ -28,7 +28,7 @@ public class Server {
 
             ClientWorker w;
 
-            try{
+            try {
                 //server.accept returns a client connection
                 w = new ClientWorker(server.accept());
                 Thread t = new Thread(w);
