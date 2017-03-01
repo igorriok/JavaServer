@@ -4,7 +4,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Ships extends Thread {
 
-    private ConcurrentHashMap shipList;
+    private ConcurrentHashMap<String, Point> shipList;
 
     public Ships (){};
 
