@@ -6,7 +6,7 @@ public class Ships extends Thread {
 
     private ConcurrentHashMap<String, Point> shipList;
 
-    public Ships (){};
+    public Ships() {};
 
     protected void addShip(String ID, Point location) {
         if(shipList.containsKey(ID)) {
@@ -14,6 +14,10 @@ public class Ships extends Thread {
         } else {
             shipList.put(ID, location);
         }
+    }
+    
+    protected ConcurentHashMap getShips() {
+        return shipList;
     }
 
     public void run(){
