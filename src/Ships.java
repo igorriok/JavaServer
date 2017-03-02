@@ -8,7 +8,7 @@ public class Ships extends Thread {
 
     public Ships() {};
 
-    protected synchronized void addShip(String ID, Point location) {
+    protected void addShip(String ID, Point location) {
         if(shipList.containsKey(ID)) {
             shipList.replace(ID, location);
         } else {
@@ -16,7 +16,7 @@ public class Ships extends Thread {
         }
     }
     
-    protected synchronized ConcurrentHashMap getShips() {
+    protected ConcurrentHashMap getShips() {
         return shipList;
     }
 
