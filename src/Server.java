@@ -61,13 +61,13 @@ public class Server {
             System.out.println("Client running");
 
             try {
-                in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-                out = new PrintWriter(client.getOutputStream(), true);
+                in = new ObjectInputStream(client.getInputStream());
+                out = new ObjectOutputStream(client.getOutputStream(), true);
                 System.out.println("in and out created");
 
                 System.out.println("Wait for messages");
 
-                while ((line = in.readLine()) != null) {
+                while ((line = (String) in.readObject()) != null) {
 
                     //line = in.readLine();
                     //Send data back to client
