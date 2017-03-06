@@ -76,9 +76,9 @@ public class Server {
 
                 System.out.println("Wait for messages");
 
-                while(true) {
+                while((line = (ArrayList) in.readObject()) != null) {
                     try {
-                        line = (ArrayList) in.readObject();
+                        //line = (ArrayList) in.readObject();
                         String head = line.get(0);
                         System.out.println("Received: " + line + "\n Time: " + LocalDateTime.now());
                         switch (head) {
@@ -99,9 +99,9 @@ public class Server {
 
                     } catch (IOException e) {
                         System.out.println("cant read object");
-                    } catch (ClassNotFoundException e) {
+                    } /**catch (ClassNotFoundException e) {
                         System.out.println("cant read thi kind of object");
-                    }
+                    }*/
                 }
 
             } catch (Exception e) {
