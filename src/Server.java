@@ -95,6 +95,8 @@ public class Server {
                                 response.add("points");
                                 out.writeObject(response);
                                 break;
+                            default:
+                                break;
                             }
 
                     } catch (IOException e) {
