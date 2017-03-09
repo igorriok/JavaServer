@@ -1,14 +1,15 @@
 import java.awt.*;
+import java.awt.geom.Point2D;
 import java.util.concurrent.ConcurrentHashMap;
 
 
 public class Ships extends Thread {
 
-    private ConcurrentHashMap<String, Point> shipList;
+    private ConcurrentHashMap<String, Point2D.Double> shipList;
 
     public Ships() {};
 
-    protected void addShip(String ID, Point location) {
+    protected void addShip(String ID, Point2D.Double location) {
         if(shipList.containsKey(ID)) {
             shipList.replace(ID, location);
         } else {
@@ -21,7 +22,7 @@ public class Ships extends Thread {
     }
 
     public void run(){
-        shipList = new ConcurrentHashMap<String, Point>();
+        shipList = new ConcurrentHashMap<String, Point2D.Double>();
     }
 
 }

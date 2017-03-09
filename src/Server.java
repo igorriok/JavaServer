@@ -1,11 +1,12 @@
 import sun.rmi.runtime.Log;
 
-import java.awt.*;
+import java.awt.geom.Point2D;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.time.LocalDateTime;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Server {
 
@@ -84,19 +85,21 @@ public class Server {
                     //line = (ArrayList) in.readObject();
                     if(line.size() != 0) {
                         head = line.get(0);
-                        System.out.println("Received: " + line.toString() + "\n Time: " + LocalDateTime.now());
+                        System.out.println("Received: " + line.toString() + "\nTime: " + LocalDateTime.now());
                         switch (head) {
                             case ship:
-                                ships.addShip(line.get(1), new Point(Integer.parseInt(line.get(2)), Integer.parseInt(line.get(3))));
-                                ConcurrentHashMap shipsHashMap = ships.getShips();
+                                ships.addShip(line.get(1), new Point2D.Double(Double.parseDouble(line.get(2)), Double.parseDouble(line.get(3))));
+                                System.out.println("Added:" + line.get(1));
+
+                                ConcurrentHashMap<String, Point2D.Double> shipsHashMap = ships.getShips();
+
                                 response = new ArrayList<>();
                                 response.add(ship);
-                                List<String> keyList = new ArrayList<String>(shipsHashMap.keySet());
-                                for(int i = 0; i < keyList.size(), i++) {
-                                    String shipKey = ((String) keylist.get(i));
-                                    response.add(shipKey);
-                                    response.add(shipHashMap.get(shipKey).getX());
-                                    response.add(shipHashMap.get(shipKey).getY());
+                                ArrayList<String> keyList = new ArrayList<>(shipsHashMap.keySet());
+                                for (String aKeyList : keyList) {
+                                    response.add(aKeyList);
+                                    response.add(Double.toString((shipsHashMap.get(aKeyList)).getX()));
+                                    response.add(Double.toString((shipsHashMap.get(aKeyList)).getY()));
                                 }
                                 out.writeObject(response);
                                 System.out.println("Sent: " + response.toString());
