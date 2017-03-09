@@ -1,3 +1,5 @@
+import sun.rmi.runtime.Log;
+
 import java.awt.*;
 import java.io.*;
 import java.net.*;
@@ -40,7 +42,7 @@ public class Server {
                 t.start();
                 System.out.println("Client connected");
             } catch (IOException e) {
-                System.out.println("Accept failed");
+                System.out.println("Cant connect");
                 System.exit(-1);
             }
         }
@@ -56,6 +58,7 @@ public class Server {
         private Ships ships;
         private ArrayList<String> line;
         private ArrayList<String> response;
+        private String head;
 
         //Constructor
         ClientWorker(Socket client, Ships ships) {
@@ -77,39 +80,38 @@ public class Server {
                 System.out.println("Wait for messages");
 
                 while((line = (ArrayList) in.readObject()) != null) {
-                    try {
-                        //line = (ArrayList) in.readObject();
-                        String head = line.get(0);
-                        System.out.println("Received: " + line + "\n Time: " + LocalDateTime.now());
+                    System.out.println("Receiving: " + line.toString());
+                    //line = (ArrayList) in.readObject();
+                    if(line.size() != 0) {
+                        head = line.get(0);
+                        System.out.println("Received: " + line.toString() + "\n Time: " + LocalDateTime.now());
                         switch (head) {
                             case ship:
                                 ships.addShip(line.get(1), new Point(Integer.parseInt(line.get(2)), Integer.parseInt(line.get(3))));
+                                ships.getShips();
                                 response = new ArrayList<>();
                                 response.add(ship);
                                 response.add("ships");
                                 out.writeObject(response);
+                                System.out.println("Sent: " + response.toString());
                                 break;
                             case id:
                                 response = new ArrayList<>();
                                 response.add(id);
                                 response.add("points");
                                 out.writeObject(response);
+                                System.out.println("Sent: " + response.toString());
                                 break;
                             default:
                                 break;
-                            }
-
-                    } catch (IOException e) {
-                        System.out.println("cant read object");
-                    } /**catch (ClassNotFoundException e) {
-                        System.out.println("cant read thi kind of object");
-                    }*/
+                        }
+                    }
                 }
 
             } catch (Exception e) {
-                System.out.println("cant connect");
-
-            } finally {
+                System.out.println("disconnected " + e);
+            }
+            finally {
                 try {
                     in.close();
                     out.close();
