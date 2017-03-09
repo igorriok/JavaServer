@@ -88,10 +88,16 @@ public class Server {
                         switch (head) {
                             case ship:
                                 ships.addShip(line.get(1), new Point(Integer.parseInt(line.get(2)), Integer.parseInt(line.get(3))));
-                                ships.getShips();
+                                ConcurrentHashMap shipsHashMap = ships.getShips();
                                 response = new ArrayList<>();
                                 response.add(ship);
-                                response.add("ships");
+                                List<String> keyList = new ArrayList<String>(shipsHashMap.keySet());
+                                for(int i = 0; i < keyList.size(), i++) {
+                                    String shipKey = ((String) keylist.get(i));
+                                    response.add(shipKey);
+                                    response.add(shipHashMap.get(shipKey).getX());
+                                    response.add(shipHashMap.get(shipKey).getY());
+                                }
                                 out.writeObject(response);
                                 System.out.println("Sent: " + response.toString());
                                 break;
