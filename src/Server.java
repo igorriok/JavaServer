@@ -107,7 +107,7 @@ public class Server {
                             case id:
                                 response = new ArrayList<>();
                                 response.add(id);
-                                response.add("points"); //to be changed in get points from SQLite table
+                                response.add("points"); //to be changed to get points from SQLite table
                                 out.writeObject(response);
                                 System.out.println("Sent: " + response.toString());
                                 break;
