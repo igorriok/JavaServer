@@ -1,6 +1,4 @@
-import sun.rmi.runtime.Log;
 
-import java.awt.geom.Point2D;
 import java.io.*;
 import java.net.*;
 import java.time.LocalTime;
@@ -89,18 +87,20 @@ public class Server {
                         System.out.println("Received: " + line.toString() + "\nTime: " + LocalDateTime.now());
                         switch (head) {
                             case shipMsg:
-                                ships.addShip(line.get(1), new Ship(Double.parseDouble(line.get(2)), Double.parseDouble(line.get(3)), LocalTime.now()));
+                                ships.addShip(line.get(1), new Ship(Double.parseDouble(line.get(2)),
+                                        Double.parseDouble(line.get(3)), LocalTime.now()));
                                 System.out.println("Added:" + line.get(1));
 
-                                ConcurrentHashMap<String, Point2D.Double> shipsHashMap = ships.getShips();
+                                ConcurrentHashMap<String, Ship> shipsHashMap = ships.getShips();
 
                                 response = new ArrayList<>();
                                 response.add(shipMsg);
+
                                 ArrayList<String> keyList = new ArrayList<>(shipsHashMap.keySet());
                                 for (String aKeyList : keyList) {
                                     response.add(aKeyList);
-                                    response.add(Double.toString((shipsHashMap.get(aKeyList)).getX()));
-                                    response.add(Double.toString((shipsHashMap.get(aKeyList)).getY()));
+                                    response.add(Double.toString((shipsHashMap.get(aKeyList)).getLat()));
+                                    response.add(Double.toString((shipsHashMap.get(aKeyList)).getLon()));
                                 }
                                 out.writeObject(response);
                                 System.out.println("Sent: " + response.toString());
