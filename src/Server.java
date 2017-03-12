@@ -3,6 +3,7 @@ import sun.rmi.runtime.Log;
 import java.awt.geom.Point2D;
 import java.io.*;
 import java.net.*;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.time.LocalDateTime;
@@ -55,7 +56,7 @@ public class Server {
 
         private Socket client;
         private final String id = "id";
-        private final String ship = "ship";
+        private final String shipMsg = "ship";
         private Ships ships;
         private ArrayList<String> line;
         private ArrayList<String> response;
@@ -87,14 +88,14 @@ public class Server {
                         head = line.get(0);
                         System.out.println("Received: " + line.toString() + "\nTime: " + LocalDateTime.now());
                         switch (head) {
-                            case ship:
-                                ships.addShip(line.get(1), new Point2D.Double(Double.parseDouble(line.get(2)), Double.parseDouble(line.get(3))));
+                            case shipMsg:
+                                ships.addShip(line.get(1), new Ship(Double.parseDouble(line.get(2)), Double.parseDouble(line.get(3)), LocalTime.now()));
                                 System.out.println("Added:" + line.get(1));
 
                                 ConcurrentHashMap<String, Point2D.Double> shipsHashMap = ships.getShips();
 
                                 response = new ArrayList<>();
-                                response.add(ship);
+                                response.add(shipMsg);
                                 ArrayList<String> keyList = new ArrayList<>(shipsHashMap.keySet());
                                 for (String aKeyList : keyList) {
                                     response.add(aKeyList);
