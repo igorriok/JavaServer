@@ -17,6 +17,8 @@ public class Server {
 
         Ships ships = new Ships();
         ships.start();
+        LifeCheck lifeCheck = new LifeCheck;
+        lifeCheck.start;
 
         System.out.println("Starting Sever Socket");
 
