@@ -1,3 +1,6 @@
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class LifeCheck extends Thread {
     
@@ -9,10 +12,16 @@ public class LifeCheck extends Thread {
 
     public void run() {
         while(true) {
-            shipList.forEach((k,v) -> if(v.getLife().compareTo(LocalDateTime.now()) > 60000) {
-                shipList.remove(k)
+            shipList.forEach((k,v) -> {
+                if(v.getLife().compareTo(LocalTime.now()) > 60000) {
+                    shipList.remove(k);
+                }
             });
-            Thread.sleep(60000);
+            try {
+                Thread.sleep(60000);
+            } catch (Exception e) {
+                System.out.print(e);
+            }
         }
 
     }
