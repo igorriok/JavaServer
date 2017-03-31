@@ -12,15 +12,20 @@ public class LifeCheck extends Thread {
 
     public void run() {
         while(true) {
-            shipList.forEach((k,v) -> {
-                if(v.getLife().compareTo(LocalTime.now()) > 60000) {
-                    shipList.remove(k);
+            System.out.println("checking lifes");
+            if (shipList != null) {
+                shipList.forEach((k, v) -> {
+                    if (v.getLife().compareTo(LocalTime.now()) > 60000) {
+                        shipList.remove(k);
+                        System.out.println("removed:" + k.toString());
+                    }
+                });
+                try {
+                    sleep(60000);
+                } catch (Exception e) {
+                    System.out.print(e);
+                    Thread.currentThread().interrupt();
                 }
-            });
-            try {
-                Thread.sleep(60000);
-            } catch (Exception e) {
-                System.out.print(e);
             }
         }
 

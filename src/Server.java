@@ -1,10 +1,14 @@
 
 import java.io.*;
 import java.net.*;
+import java.time.Duration;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.time.LocalDateTime;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Server {
@@ -17,8 +21,26 @@ public class Server {
 
         Ships ships = new Ships();
         ships.start();
-        LifeCheck lifeCheck = new LifeCheck;
-        lifeCheck.start;
+        //LifeCheck lifeCheck = new LifeCheck(ships.getShips());
+        //lifeCheck.start();
+
+        Timer lifeChecker = new Timer();
+        lifeChecker.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println("checking lifes");
+                ConcurrentHashMap<String, Ship> shipList = ships.getShips();
+                if (shipList != null) {
+                    shipList.forEach((k, v) -> {
+                        System.out.println(ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()));
+                        if (ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()) >= 1) {
+                            shipList.remove(k);
+                            System.out.println("removed:" + k);
+                        }
+                    });
+                }
+            }
+        }, 2*60000, 2*60000);
 
         System.out.println("Starting Sever Socket");
 
