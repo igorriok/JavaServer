@@ -20,8 +20,6 @@ public class Server {
 
         Ships ships = new Ships();
         ships.start();
-        //LifeCheck lifeCheck = new LifeCheck(ships.getShips());
-        //lifeCheck.start();
 
         Timer lifeChecker = new Timer();
         lifeChecker.scheduleAtFixedRate(new TimerTask() {
