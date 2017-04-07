@@ -1,6 +1,7 @@
 package Server;
 
 import java.sql.*;
+import java.util.ArrayList;
 
 import static Server.Deal.Entries;
 
@@ -14,7 +15,7 @@ public class Fishies extends Thread {
     public void run() {
 
         try {
-            Connection conn = DriverManager.getConnection(Entries.url);
+            conn = DriverManager.getConnection(Entries.url);
             Statement stmt = conn.createStatement();
             // create a new table
             stmt.execute(Entries.sql);
@@ -25,19 +26,32 @@ public class Fishies extends Thread {
 
     /**
      * Insert a new row into the warehouses table
-     * @param name
-     * @param capacity
+     * @param token
+     * @param points
      */
-    public void insert(String name, double capacity) {
+    public void insert(String token, int points) {
 
         String sql = "INSERT INTO " + Entries.TABLE_NAME + "(" + Entries.PET_TOKEN + "," + Entries.PET_POINTS + ") VALUES(?,?)";
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
-            pstmt.setString(1, name);
-            pstmt.setDouble(2, capacity);
+            pstmt.setString(1, token);
+            pstmt.setDouble(2, points);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    public int getPoints(String token) {
+        int points = 0;
+        String sql = "SELECT" + Entries.PET_POINTS + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_TOKEN + " = " + token;
+        try {
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            ResultSet rs = pstmt.executeQuery();
+            points = rs.getInt(Entries.PET_POINTS);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return points;
     }
 }

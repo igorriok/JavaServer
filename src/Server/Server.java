@@ -39,6 +39,11 @@ public class Server {
             }
         }, 2*60000, 2*60000);
 
+        Fishies db = new Fishies();
+        db.run();
+
+        db.insert("test1", 123);
+
         System.out.println("Starting Sever Socket");
 
         ServerSocket server = null;
@@ -58,7 +63,7 @@ public class Server {
 
             try {
                 //server.accept returns a client connection
-                w = new ClientWorker(server.accept(), ships);
+                w = new ClientWorker(server.accept(), ships, db);
                 Thread t = new Thread(w);
                 t.start();
                 System.out.println("Client connected");
@@ -80,11 +85,13 @@ public class Server {
         private ArrayList<String> line;
         private ArrayList<String> response;
         private String head;
+        private Fishies db;
 
         //Constructor
-        ClientWorker(Socket client, Ships ships) {
+        ClientWorker(Socket client, Ships ships, Fishies db) {
             this.client = client;
             this.ships = ships;
+            this.db = db;
         }
 
         public void run() {
@@ -129,7 +136,8 @@ public class Server {
                             case id:
                                 response = new ArrayList<>();
                                 response.add(id);
-                                response.add("points"); //to be changed to get points from SQLite table
+                                int points = db.getPoints(line.get(1));
+                                response.add(Integer.toString(points));
                                 out.writeObject(response);
                                 System.out.println("Sent: " + response.toString());
                                 break;

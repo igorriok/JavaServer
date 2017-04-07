@@ -13,7 +13,7 @@ final class Deal {
     static final class Entries {
 
         // SQLite connection string
-        final static String url = "jdbc:sqlite:C://sqlite/db/tests.db";
+        final static String url = "jdbc:sqlite:/home/igor/fish/aqua.db";
 
         /** Name of database table for pets
          */
@@ -30,9 +30,9 @@ final class Deal {
         final static String PET_POINTS = "Points";
 
         // SQL statement for creating a new table
-        final static String sql = "CREATE TABLE IF NOT EXISTS" + TABLE_NAME + " (\n"
+        final static String sql = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " (\n"
                 + PET_TOKEN + " TEXT NOT NULL,\n"
-                + PET_POINTS + "	INTEGER NOT NULL DEFAULT 0);";
+                + PET_POINTS + " INTEGER NOT NULL DEFAULT 0);";
     }
 
 }
