@@ -38,6 +38,26 @@ public class Server {
                 }
             }
         }, 2*60000, 2*60000);
+        
+        Missles missles = new Missles();
+        missles.start();
+        
+        Timer posCalc = new Timer();
+        lifeCalc.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                ConcurrentHashMap<String, Ship> shipList = ships.getMissles();
+                if (shipList != null) {
+                    shipList.forEach((k, v) -> {
+                        System.out.println(ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()));
+                        if (ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()) >= 1) {
+                            shipList.remove(k);
+                            System.out.println("removed:" + k);
+                        }
+                    });
+                }
+            }
+        }, 1000, 1000);
 
         Fishies db = new Fishies();
         db.run();
@@ -141,6 +161,9 @@ public class Server {
                                 out.writeObject(response);
                                 System.out.println("Sent: " + response.toString());
                                 break;
+                            case missle:
+                                missles.addMissle(new Missle(int.parseInt(line.get(1)), Double.parseDouble(line.get(2)),
+                                        Double.parseDouble(line.get(3)), LocalTime.now());
                             default:
                                 break;
                         }
