@@ -43,7 +43,7 @@ public class Server {
         missles.start();
         
         Timer posCalc = new Timer();
-        lifeCalc.scheduleAtFixedRate(new TimerTask() {
+        posCalc.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 ConcurrentHashMap<String, Ship> shipList = ships.getMissles();
