@@ -157,7 +157,8 @@ public class Server {
                                 response = new ArrayList<>();
                                 response.add(id);
                                 int points = db.getPoints(line.get(1));
-                                response.add(Integer.toString(points));
+                                response.add(Integer.toString(points.get(1)));
+                                response.add(Integer.toString(points.get(2)));
                                 out.writeObject(response);
                                 System.out.println("Sent: " + response.toString());
                                 break;
