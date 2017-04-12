@@ -6,10 +6,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Missles extends Thread {
 
-    private ConcurrentHashMap<String, Ship> shipList;
+    private ConcurrentHashMap<String, Ship> missleList;
 
 
-    protected void addShip(String ID, Ship location) {
+    protected void addMissle(int ID, Ship location) {
         if(shipList.containsKey(ID)) {
             shipList.replace(ID, location);
         } else {
