@@ -4,15 +4,17 @@ import java.time.LocalTime;
 
 public class Ship {
 
+    private String ShipName;
     private double lat, lon;
     private LocalTime life;
 
-    public Ship(double lat, double lon, LocalTime life){
+    public Ship (String ShipName, double lat, double lon, LocalTime life) {
+        this.ShipName = ShipName;
         this.lat = lat;
         this.lon = lon;
         this.life = life;
     }
-
+    
     public double getLat() {
         return lat;
     }
