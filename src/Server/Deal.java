@@ -14,6 +14,8 @@ final class Deal {
 
         // SQLite connection string
         final static String url = "jdbc:sqlite:/home/igor/fish/aqua.db";
+        
+        final static String PET_ID = "ID";
 
         /** Name of database table for pets
          */
@@ -31,6 +33,7 @@ final class Deal {
 
         // SQL statement for creating a new table
         final static String sql = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " (\n"
+                + PET_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + PET_TOKEN + " TEXT NOT NULL,\n"
                 + PET_POINTS + " INTEGER NOT NULL DEFAULT 0);";
     }
