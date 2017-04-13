@@ -21,8 +21,8 @@ public class Server {
         Ships ships = new Ships();
         ships.start();
 
-        Timer lifeChecker = new Timer();
-        lifeChecker.scheduleAtFixedRate(new TimerTask() {
+        Timer shipLifeChecker = new Timer();
+        shipLifeChecker.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 System.out.println("checking lifes");
@@ -42,19 +42,15 @@ public class Server {
         Missles missles = new Missles();
         missles.start();
         
-        Timer posCalc = new Timer();
-        posCalc.scheduleAtFixedRate(new TimerTask() {
+        Timer misslePosCalc = new Timer();
+        misslePosCalc.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                ConcurrentHashMap<String, Ship> shipList = ships.getMissles();
-                if (shipList != null) {
-                    shipList.forEach((k, v) -> {
-                        System.out.println(ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()));
-                        if (ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()) >= 1) {
-                            shipList.remove(k);
-                            System.out.println("removed:" + k);
-                        }
-                    });
+                ConcurrentHashMap<Ship> missleList = missles.getMissles();
+                if (missleList != null) {
+                    for(Missle missle : missleList) {
+                        
+                    }
                 }
             }
         }, 1000, 1000);
