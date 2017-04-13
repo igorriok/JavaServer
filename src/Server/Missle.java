@@ -5,11 +5,12 @@ import java.time.LocalTime;
 public class Missle {
 
     private int ID;
-    private double lat, lon;
+    private double lat, lon, bearing;
     private LocalTime life;
 
-    public Missle(int ID, double lat, double lon, LocalTime life) {
+    public Missle(int ID, double bearing, double lat, double lon, LocalTime life) {
         this.ID = ID;
+        this.bearing = bearing;
         this.lat = lat;
         this.lon = lon;
         this.life = life;
@@ -17,6 +18,10 @@ public class Missle {
     
     public double getID() {
         return ID;
+    }
+    
+    public double getBearing() {
+        return bearing;
     }
 
     public double getLat() {
