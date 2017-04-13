@@ -43,7 +43,7 @@ public class Fishies extends Thread {
     }
 
     public ArrayList getPoints(String token) {
-        ArrayList<> points = new ArrayList<>;
+        ArrayList<> points = new ArrayList<>();
         String sql = "SELECT" + Entries.PET_POINTS + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_TOKEN + " = " + token;
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
