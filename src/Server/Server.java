@@ -135,8 +135,8 @@ public class Server {
                         System.out.println("Received: " + line.toString() + "\nTime: " + LocalDateTime.now());
                         switch (head) {
                             case shipMsg:
-                                ships.addShip(line.get(1), new Ship(Double.parseDouble(line.get(2)),
-                                        Double.parseDouble(line.get(3)), LocalTime.now()));
+                                ships.addShip(line.get(1), new Ship(line.get(2), Double.parseDouble(line.get(3)),
+                                        Double.parseDouble(line.get(4)), LocalTime.now()));
                                 System.out.println("Added:" + line.get(1));
 
                                 ConcurrentHashMap<String, Ship> shipsHashMap = ships.getShips();
@@ -156,9 +156,9 @@ public class Server {
                             case id:
                                 response = new ArrayList<>();
                                 response.add(id);
-                                int points = db.getPoints(line.get(1));
+                                ArrayList<> points = db.getPoints(line.get(1));
+                                response.add(Integer.toString(points.get(0)));
                                 response.add(Integer.toString(points.get(1)));
-                                response.add(Integer.toString(points.get(2)));
                                 out.writeObject(response);
                                 System.out.println("Sent: " + response.toString());
                                 break;
