@@ -18,7 +18,7 @@ public class Server {
         //Scanner scanner = new Scanner(System.in);
         //String insert = scanner.nextLine();
         
-        double R = 6378.1; //Radius of the Earth
+        double R = 6378.1; //Radius of the Earth km
         double d = 0.07; //500km/h in 0.5 sec
         
         Ships ships = new Ships();
@@ -49,13 +49,13 @@ public class Server {
         misslePosCalc.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                ConcurrentHashMap<Ship> missleList = missles.getMissles();
+                ConcurrentLinkedQueue<Ship> missleList = missles.getMissles();
                 if (missleList != null) {
                     for(Missle missle : missleList) {
-                        double bearing = Math.radians(missle.getBearing()); //Bearing is 90 degrees converted to radians.
+                        double bearing = Math.toRadians(missle.getBearing()); //Bearing is 90 degrees converted to radians.
 
-                        double lat1 = math.radians(missle.getLat()); //Current lat point converted to radians
-                        double lon1 = math.radians(missle.getLon()); //Current lon point converted to radians
+                        double lat1 = math.toRadians(missle.getLat()); //Current lat point converted to radians
+                        double lon1 = math.toRadians(missle.getLon()); //Current lon point converted to radians
 
                         double lat2 = math.asin( math.sin(lat1)*math.cos(d/R) + math.cos(lat1)*math.sin(d/R)*math.cos(bearing));
 
@@ -66,6 +66,51 @@ public class Server {
                         
                         missle.setLat(lat2);
                         missle.setLon(lon2);
+                    }
+                }
+            }
+        }, 500, 500);
+        
+        Timer missleCheck = new Timer();
+        missleCheck.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                ConcurrentLinkedQueue<Ship> missleList = missles.getMissles();
+                if (missleList != null) {
+                    for(Missle missle : missleList) {
+                        
+                        if (shipList != null) {
+                            shipList.forEach((k, v) -> {
+                            
+                                lat1 = Math.toRadians(missle.getLat());
+                                lon1 = Math.toRadians(missle.getLon());
+
+                                lat2 = Math.toRadians(v.getLat());
+                                lon2 = Math.toRadians(v.getLon());
+                                // P
+                                double rho1 = R * cos(lat1);
+                                double z1 = R * sin(lat1);
+                                double x1 = rho1 * cos(lon1);
+                                double y1 = rho1 * sin(lon1);
+                                // Q
+                                double rho2 = R * cos(lat2);
+                                double z2 = R * sin(lat2);
+                                double x2 = rho2 * cos(lon2);
+                                double y2 = rho2 * sin(lon2);
+                                // Dot product
+                                double dot = (x1 * x2 + y1 * y2 + z1 * z2);
+                                double cos_theta = dot / (R * R);
+
+                                double theta = acos(cos_theta);
+                                // Distance in Metres
+                                double dist =  R * theta;
+                                
+                                if (dist <= 0,004) {
+                                    missleList.remove(missle);
+                                    //TODO: add points to shooting ID
+                                }
+                            });
+                        }
                     }
                 }
             }
