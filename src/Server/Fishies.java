@@ -43,13 +43,13 @@ public class Fishies extends Thread {
     }
 
     public ArrayList getPoints(String token) {
-        ArrayList<> points = new ArrayList<>();
+        ArrayList<Double> points = new ArrayList<>();
         String sql = "SELECT" + Entries.PET_POINTS + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_TOKEN + " = " + token;
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
             ResultSet rs = pstmt.executeQuery();
-            points.add(rs.getInt(Entries.PET_POINTS));
-            points.add(rs.getInt(Entries.PET_ID));
+            points.add(rs.getDouble(Entries.PET_POINTS));
+            points.add(rs.getDouble(Entries.PET_ID));
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }

@@ -9,6 +9,11 @@ import java.time.LocalDateTime;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+import static java.lang.Math.acos;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
 
 public class Server {
 
@@ -24,12 +29,13 @@ public class Server {
         Ships ships = new Ships();
         ships.start();
 
+        ConcurrentHashMap<String, Ship> shipList = ships.getShips();
+
         Timer shipLifeChecker = new Timer();
         shipLifeChecker.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 System.out.println("checking lifes");
-                ConcurrentHashMap<String, Ship> shipList = ships.getShips();
                 if (shipList != null) {
                     shipList.forEach((k, v) -> {
                         System.out.println(ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()));
@@ -44,25 +50,26 @@ public class Server {
         
         Missles missles = new Missles();
         missles.start();
+
+        ConcurrentLinkedQueue<Missle> missleList = missles.getMissles();
         
         Timer misslePosCalc = new Timer();
         misslePosCalc.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                ConcurrentLinkedQueue<Ship> missleList = missles.getMissles();
                 if (missleList != null) {
                     for(Missle missle : missleList) {
                         double bearing = Math.toRadians(missle.getBearing()); //Bearing is 90 degrees converted to radians.
 
-                        double lat1 = math.toRadians(missle.getLat()); //Current lat point converted to radians
-                        double lon1 = math.toRadians(missle.getLon()); //Current lon point converted to radians
+                        double lat1 = Math.toRadians(missle.getLat()); //Current lat point converted to radians
+                        double lon1 = Math.toRadians(missle.getLon()); //Current lon point converted to radians
 
-                        double lat2 = math.asin( math.sin(lat1)*math.cos(d/R) + math.cos(lat1)*math.sin(d/R)*math.cos(bearing));
+                        double lat2 = Math.asin( sin(lat1)* cos(d/R) + cos(lat1)* sin(d/R)* cos(bearing));
 
-                        double lon2 = lon1 + math.atan2(math.sin(bearing)*math.sin(d/R)*math.cos(lat1), math.cos(d/R)-math.sin(lat1)*math.sin(lat2));
+                        double lon2 = lon1 + Math.atan2(sin(bearing)* sin(d/R)* cos(lat1), cos(d/R)- sin(lat1)* sin(lat2));
 
-                        lat2 = math.degrees(lat2);
-                        lon2 = math.degrees(lon2);
+                        lat2 = Math.toDegrees(lat2);
+                        lon2 = Math.toDegrees(lon2);
                         
                         missle.setLat(lat2);
                         missle.setLon(lon2);
@@ -75,18 +82,17 @@ public class Server {
         missleCheck.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                ConcurrentLinkedQueue<Ship> missleList = missles.getMissles();
                 if (missleList != null) {
                     for(Missle missle : missleList) {
                         
                         if (shipList != null) {
                             shipList.forEach((k, v) -> {
                             
-                                lat1 = Math.toRadians(missle.getLat());
-                                lon1 = Math.toRadians(missle.getLon());
+                                double lat1 = Math.toRadians(missle.getLat());
+                                double lon1 = Math.toRadians(missle.getLon());
 
-                                lat2 = Math.toRadians(v.getLat());
-                                lon2 = Math.toRadians(v.getLon());
+                                double lat2 = Math.toRadians(v.getLat());
+                                double lon2 = Math.toRadians(v.getLon());
                                 // P
                                 double rho1 = R * cos(lat1);
                                 double z1 = R * sin(lat1);
@@ -105,7 +111,7 @@ public class Server {
                                 // Distance in Metres
                                 double dist =  R * theta;
                                 
-                                if (dist <= 0,004) {
+                                if (dist <= 0.004) {
                                     missleList.remove(missle);
                                     //TODO: add points to shooting ID
                                 }
@@ -140,7 +146,7 @@ public class Server {
 
             try {
                 //server.accept returns a client connection
-                w = new ClientWorker(server.accept(), ships, db);
+                w = new ClientWorker(server.accept(), ships, db, missles);
                 Thread t = new Thread(w);
                 t.start();
                 System.out.println("Client connected");
@@ -158,14 +164,17 @@ public class Server {
         private Socket client;
         private final String id = "id";
         private final String shipMsg = "ship";
+        private final String missle = "missle";
         private Ships ships;
         private ArrayList<String> line;
         private ArrayList<String> response;
         private String head;
         private Fishies db;
+        private Missles missles;
 
         //Constructor
-        ClientWorker(Socket client, Ships ships, Fishies db) {
+        ClientWorker(Socket client, Ships ships, Fishies db, Missles missles) {
+            this.missles = missles;
             this.client = client;
             this.ships = ships;
             this.db = db;
@@ -213,15 +222,15 @@ public class Server {
                             case id:
                                 response = new ArrayList<>();
                                 response.add(id);
-                                ArrayList<> points = db.getPoints(line.get(1));
-                                response.add(Integer.toString(points.get(0)));
-                                response.add(Integer.toString(points.get(1)));
+                                ArrayList<Double> points = db.getPoints(line.get(1));
+                                response.add(Double.toString(points.get(0)));
+                                response.add(Double.toString(points.get(1)));
                                 out.writeObject(response);
                                 System.out.println("Sent: " + response.toString());
                                 break;
                             case missle:
-                                missles.addMissle(new Missle(int.parseInt(line.get(1)), Double.parseDouble(line.get(2)),
-                                        Double.parseDouble(line.get(3)), LocalTime.now());
+                                missles.addMissle(new Missle(Integer.parseInt(line.get(1)), Double.parseDouble(line.get(2)), Double.parseDouble(line.get(3)),
+                                        Double.parseDouble(line.get(4)), LocalTime.now()));
                             default:
                                 break;
                         }

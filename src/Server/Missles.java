@@ -2,15 +2,16 @@ package Server;
 
 import java.time.LocalTime;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 
 public class Missles extends Thread {
 
-    private ConcurrentLinkedQueue<Ship> missleList;
+    private ConcurrentLinkedQueue<Missle> missleList;
 
 
-    protected void addMissle(Ship ship) {
-        missleList.add(ship);
+    protected void addMissle(Missle missle) {
+        missleList.add(missle);
     }
     
     protected ConcurrentLinkedQueue getMissles() {
