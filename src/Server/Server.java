@@ -17,7 +17,10 @@ public class Server {
 
         //Scanner scanner = new Scanner(System.in);
         //String insert = scanner.nextLine();
-
+        
+        double R = 6378.1; //Radius of the Earth
+        double d = 0.07; //500km/h in 0.5 sec
+        
         Ships ships = new Ships();
         ships.start();
 
@@ -49,11 +52,24 @@ public class Server {
                 ConcurrentHashMap<Ship> missleList = missles.getMissles();
                 if (missleList != null) {
                     for(Missle missle : missleList) {
+                        double bearing = Math.radians(missle.getBearing()); //Bearing is 90 degrees converted to radians.
+
+                        double lat1 = math.radians(missle.getLat()); //Current lat point converted to radians
+                        double lon1 = math.radians(missle.getLon()); //Current lon point converted to radians
+
+                        double lat2 = math.asin( math.sin(lat1)*math.cos(d/R) + math.cos(lat1)*math.sin(d/R)*math.cos(bearing));
+
+                        double lon2 = lon1 + math.atan2(math.sin(bearing)*math.sin(d/R)*math.cos(lat1), math.cos(d/R)-math.sin(lat1)*math.sin(lat2));
+
+                        lat2 = math.degrees(lat2);
+                        lon2 = math.degrees(lon2);
                         
+                        missle.setLat(lat2);
+                        missle.setLon(lon2);
                     }
                 }
             }
-        }, 1000, 1000);
+        }, 500, 500);
 
         Fishies db = new Fishies();
         db.run();
