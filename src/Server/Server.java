@@ -179,6 +179,7 @@ public class Server {
         private String head;
         private Fishies db;
         private Missles missles;
+        ConcurrentHashMap<String, Ship> shipsHashMap;
 
         //Constructor
         ClientWorker(Socket client, Ships ships, Fishies db, Missles missles) {
@@ -201,6 +202,8 @@ public class Server {
 
                 System.out.println("Wait for messages");
 
+                shipsHashMap = ships.getShips();
+
                 while((line = (ArrayList) in.readObject()) != null) {
                     System.out.println("Receiving: " + line.toString());
                     //line = (ArrayList) in.readObject();
@@ -213,14 +216,12 @@ public class Server {
                                         Double.parseDouble(line.get(4)), LocalTime.now()));
                                 System.out.println("Added:" + line.get(1));
 
-                                ConcurrentHashMap<String, Ship> shipsHashMap = ships.getShips();
-
                                 response = new ArrayList<>();
                                 response.add(shipMsg);
 
                                 ArrayList<String> keyList = new ArrayList<>(shipsHashMap.keySet());
                                 for (String aKeyList : keyList) {
-                                    response.add(aKeyList);
+                                    response.add((shipsHashMap.get(aKeyList)).getName());
                                     response.add(Double.toString((shipsHashMap.get(aKeyList)).getLat()));
                                     response.add(Double.toString((shipsHashMap.get(aKeyList)).getLon()));
                                 }

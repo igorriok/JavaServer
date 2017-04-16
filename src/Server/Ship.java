@@ -14,6 +14,10 @@ public class Ship {
         this.lon = lon;
         this.life = life;
     }
+
+    public String getName() {
+        return ShipName;
+    }
     
     public double getLat() {
         return lat;
