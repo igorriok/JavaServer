@@ -84,36 +84,44 @@ public class Server {
             public void run() {
                 if (missleList != null) {
                     for(Missle missle : missleList) {
-                        
+                        Double missleID = missle.getID();
                         if (shipList != null) {
                             shipList.forEach((k, v) -> {
-                            
-                                double lat1 = Math.toRadians(missle.getLat());
-                                double lon1 = Math.toRadians(missle.getLon());
 
-                                double lat2 = Math.toRadians(v.getLat());
-                                double lon2 = Math.toRadians(v.getLon());
-                                // P
-                                double rho1 = R * cos(lat1);
-                                double z1 = R * sin(lat1);
-                                double x1 = rho1 * cos(lon1);
-                                double y1 = rho1 * sin(lon1);
-                                // Q
-                                double rho2 = R * cos(lat2);
-                                double z2 = R * sin(lat2);
-                                double x2 = rho2 * cos(lon2);
-                                double y2 = rho2 * sin(lon2);
-                                // Dot product
-                                double dot = (x1 * x2 + y1 * y2 + z1 * z2);
-                                double cos_theta = dot / (R * R);
+                                if(!k.equals(missleID.toString())) {
 
-                                double theta = acos(cos_theta);
-                                // Distance in Metres
-                                double dist =  R * theta;
-                                
-                                if (dist <= 0.004) {
+                                    double lat1 = Math.toRadians(missle.getLat());
+                                    double lon1 = Math.toRadians(missle.getLon());
+
+                                    double lat2 = Math.toRadians(v.getLat());
+                                    double lon2 = Math.toRadians(v.getLon());
+                                    // P
+                                    double rho1 = R * cos(lat1);
+                                    double z1 = R * sin(lat1);
+                                    double x1 = rho1 * cos(lon1);
+                                    double y1 = rho1 * sin(lon1);
+                                    // Q
+                                    double rho2 = R * cos(lat2);
+                                    double z2 = R * sin(lat2);
+                                    double x2 = rho2 * cos(lon2);
+                                    double y2 = rho2 * sin(lon2);
+                                    // Dot product
+                                    double dot = (x1 * x2 + y1 * y2 + z1 * z2);
+                                    double cos_theta = dot / (R * R);
+
+                                    double theta = acos(cos_theta);
+                                    // Distance in Metres
+                                    double dist = R * theta;
+
+                                    if (dist <= 0.004) {
+                                        missleList.remove(missle);
+                                        //TODO: add points to shooted ID
+                                    }
+                                }
+
+                                if (ChronoUnit.MINUTES.between(missle.getLife(), LocalTime.now()) >= 2) {
                                     missleList.remove(missle);
-                                    //TODO: add points to shooting ID
+                                    System.out.println("removed:" + missle);
                                 }
                             });
                         }
