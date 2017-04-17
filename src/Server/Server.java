@@ -173,6 +173,7 @@ public class Server {
         private final String id = "id";
         private final String shipMsg = "ship";
         private final String missle = "missle";
+        private final String missleArray = "missleArray";
         private Ships ships;
         private ArrayList<String> line;
         private ArrayList<String> response;
@@ -180,6 +181,7 @@ public class Server {
         private Fishies db;
         private Missles missles;
         ConcurrentHashMap<String, Ship> shipsHashMap;
+        ConcurrentLinkedQueue<Missle> missleList;
 
         //Constructor
         ClientWorker(Socket client, Ships ships, Fishies db, Missles missles) {
@@ -203,6 +205,7 @@ public class Server {
                 System.out.println("Wait for messages");
 
                 shipsHashMap = ships.getShips();
+                missleList = missles.getMissles();
 
                 while((line = (ArrayList) in.readObject()) != null) {
                     System.out.println("Receiving: " + line.toString());
@@ -240,6 +243,13 @@ public class Server {
                             case missle:
                                 missles.addMissle(new Missle(Integer.parseInt(line.get(1)), Double.parseDouble(line.get(2)), Double.parseDouble(line.get(3)),
                                         Double.parseDouble(line.get(4)), LocalTime.now()));
+                            case missleArray:
+                                response = new ArrayList<>();
+                                response.add("missleArray");
+                                for (Missle missle : missleList) {
+                                    response.add(Double.toString(missle.getLat()));
+                                    response.add(Double.toString(missle.getLon()));
+                                }
                             default:
                                 break;
                         }
