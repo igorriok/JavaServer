@@ -243,6 +243,7 @@ public class Server {
                             case missle:
                                 missles.addMissle(new Missle(Integer.parseInt(line.get(1)), Double.parseDouble(line.get(2)), Double.parseDouble(line.get(3)),
                                         Double.parseDouble(line.get(4)), LocalTime.now()));
+                                break;
                             case missleArray:
                                 response = new ArrayList<>();
                                 response.add("missleArray");
@@ -250,6 +251,7 @@ public class Server {
                                     response.add(Double.toString(missle.getLat()));
                                     response.add(Double.toString(missle.getLon()));
                                 }
+                                break;
                             default:
                                 break;
                         }
