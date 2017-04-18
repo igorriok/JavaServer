@@ -248,6 +248,7 @@ public class Server {
                                 response = new ArrayList<>();
                                 response.add("missleArray");
                                 for (Missle missle : missleList) {
+                                    response.add(Double.toString(missle.getBearing()));
                                     response.add(Double.toString(missle.getLat()));
                                     response.add(Double.toString(missle.getLon()));
                                 }
