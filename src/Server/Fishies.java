@@ -43,16 +43,36 @@ public class Fishies extends Thread {
     }
 
     public ArrayList getPoints(String token) {
-        ArrayList<Double> points = new ArrayList<>();
-        String sql = "SELECT " + Entries.PET_POINTS + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_TOKEN + " = " + token;
+        if (check(token)) {
+            ArrayList<> points = new ArrayList<>();
+            String sql = "SELECT" + Entries.PET_POINTS + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_TOKEN + " = " + token + ";";
+            try {
+                PreparedStatement pstmt = conn.prepareStatement(sql);
+                ResultSet rs = pstmt.executeQuery();
+                points.add(rs.getInt(Entries.PET_POINTS));
+                points.add(rs.getInt(Entries.PET_ID));
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
+            }
+            return points;
+        } else {
+            insert(token, 0);
+        }
+    }
+    
+    public Boolean check(String token) {
+        
+        String sql = "SELECT EXISTS (SELECT" + Entries.PET_POINTS + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_TOKEN + " = " + token + " LIMIT 1);";
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
             ResultSet rs = pstmt.executeQuery();
-            points.add(rs.getDouble(Entries.PET_POINTS));
-            points.add(rs.getDouble(Entries.PET_ID));
+            if (rs > 0) {
+                return true;
+            }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+            return false;
         }
-        return points;
+        return false;
     }
 }
