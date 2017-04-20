@@ -77,9 +77,10 @@ public class Fishies extends Thread {
                 ResultSet rs = pstmt.executeQuery();
                 points[0] = rs.getInt(Entries.PET_POINTS);
                 points[1] = rs.getInt(Entries.PET_ID);
-            } catch (SQLException e) {
-                System.out.println("Record hasn't been added " + e.getMessage());
+            } catch (SQLException error) {
+                System.out.println("Record hasn't been added " + error.getMessage());
             }
+        }
         return points;
     }
     
