@@ -61,7 +61,7 @@ public class Fishies extends Thread {
 
     public int[] getPoints(String token) {
         int[] points = new int[2];
-        String sql = "SELECT " + Entries.PET_POINTS + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_TOKEN + " = " + token + ";";
+        String sql = "SELECT * " + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_TOKEN + " = " + token + ";";
         
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
