@@ -1,7 +1,5 @@
 package Server;
 
-import java.time.LocalTime;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 
@@ -9,6 +7,9 @@ public class Missles extends Thread {
 
     private ConcurrentLinkedQueue<Missle> missleList;
 
+    public void run() {
+        missleList = new ConcurrentLinkedQueue<Missle>();
+    }
 
     protected void addMissle(Missle missle) {
         missleList.add(missle);

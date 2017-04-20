@@ -133,8 +133,6 @@ public class Server {
         Fishies db = new Fishies();
         db.run();
 
-        db.insert("test1", 123);
-
         System.out.println("Starting Sever Socket");
 
         ServerSocket server = null;
@@ -234,9 +232,9 @@ public class Server {
                             case id:
                                 response = new ArrayList<>();
                                 response.add(id);
-                                ArrayList<Double> points = db.getPoints(line.get(1));
-                                response.add(Double.toString(points.get(0)));
-                                response.add(Double.toString(points.get(1)));
+                                int[] points = db.getPoints(line.get(1));
+                                response.add(Double.toString(points[0]));
+                                response.add(Double.toString(points[1]));
                                 out.writeObject(response);
                                 System.out.println("Sent: " + response.toString());
                                 break;

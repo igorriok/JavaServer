@@ -1,7 +1,6 @@
 package Server;
 
 import java.sql.*;
-import java.util.ArrayList;
 
 import static Server.Deal.Entries;
 
@@ -26,8 +25,8 @@ public class Fishies extends Thread {
 
     /**
      * Insert a new row into the warehouses table
-     * @param token
-     * @param points
+     * @param token received from app
+     * @param points default is 0
      */
     public void insert(String token, int points) {
 
@@ -43,7 +42,7 @@ public class Fishies extends Thread {
     }
     
     public void updatePoints(String token, int points) {
-        String sql = "SELECT" + Entries.PET_POINTS + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_TOKEN + " = " + token + ";";
+        String sql = "SELECT " + Entries.PET_POINTS + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_TOKEN + " = " + token + ";";
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
             ResultSet rs = pstmt.executeQuery();
@@ -51,24 +50,24 @@ public class Fishies extends Thread {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
-        sql = "UPDATE " + Entries.TABLE_NAME + " SET " + Entries.PET_POINTS + " = " + points + " WHERE " Entries.PET_TOKEN + " = " token + ";";
+        sql = "UPDATE " + Entries.TABLE_NAME + " SET " + Entries.PET_POINTS + " = " + points + " WHERE " + Entries.PET_TOKEN + " = " + token + ";";
         try {
-            pstmt = conn.prepareStatement(sql);
+            PreparedStatement pstmt = conn.prepareStatement(sql);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
     }
 
-    public ArrayList getPoints(String token) {
+    public int[] getPoints(String token) {
+        int[] points = new int[2];
+        String sql = "SELECT " + Entries.PET_POINTS + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_TOKEN + " = " + token + ";";
         if (check(token)) {
-            ArrayList<> points = new ArrayList<>();
-            String sql = "SELECT" + Entries.PET_POINTS + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_TOKEN + " = " + token + ";";
             try {
                 PreparedStatement pstmt = conn.prepareStatement(sql);
                 ResultSet rs = pstmt.executeQuery();
-                points.add(rs.getInt(Entries.PET_POINTS));
-                points.add(rs.getInt(Entries.PET_ID));
+                points[0] = rs.getInt(Entries.PET_POINTS);
+                points[1] = rs.getInt(Entries.PET_ID);
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
             }
@@ -76,15 +75,24 @@ public class Fishies extends Thread {
         } else {
             insert(token, 0);
         }
+        try {
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            ResultSet rs = pstmt.executeQuery();
+            points[0] = rs.getInt(Entries.PET_POINTS);
+            points[1] = rs.getInt(Entries.PET_ID);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return points;
     }
     
     public Boolean check(String token) {
         
-        String sql = "SELECT EXISTS (SELECT" + Entries.PET_POINTS + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_TOKEN + " = " + token + " LIMIT 1);";
+        String sql = "SELECT EXISTS (SELECT " + 1 + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_TOKEN + " = " + token + " LIMIT 1);";
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
             ResultSet rs = pstmt.executeQuery();
-            if (rs > 0) {
+            if (rs.getInt(1) > 0) {
                 return true;
             }
         } catch (SQLException e) {
