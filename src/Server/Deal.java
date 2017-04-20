@@ -34,7 +34,7 @@ final class Deal {
         // SQL statement for creating a new table
         final static String sql = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " (\n"
                 + PET_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,\n"
-                + PET_TOKEN + " TEXT NOT NULL,\n"
+                + PET_TOKEN + " TEXT NOT NULL UNIQUE,\n"
                 + PET_POINTS + " INTEGER NOT NULL DEFAULT 0);";
     }
 
