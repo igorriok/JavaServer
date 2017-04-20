@@ -87,7 +87,7 @@ public class Server {
                 ConcurrentHashMap<String, Ship> shipList = ships.getShips();
                 if (missleList != null) {
                     for(Missle missle : missleList) {
-                        Double missleID = missle.getID();
+                        int missleID = missle.getID();
                         if (shipList != null) {
                             shipList.forEach((k, v) -> {
 
