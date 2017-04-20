@@ -28,6 +28,9 @@ public class Server {
         
         Ships ships = new Ships();
         ships.start();
+        
+        Fishies db = new Fishies();
+        db.run();
 
         Timer shipLifeChecker = new Timer();
         shipLifeChecker.scheduleAtFixedRate(new TimerTask() {
@@ -116,6 +119,7 @@ public class Server {
                                     if (dist <= 0.004) {
                                         missleList.remove(missle);
                                         //TODO: add points to shooted ID
+                                        db.updatePoints(missleID, 1);
                                     }
                                 }
 
@@ -129,9 +133,6 @@ public class Server {
                 }
             }
         }, 500, 500);
-
-        Fishies db = new Fishies();
-        db.run();
 
         System.out.println("Starting Sever Socket");
 
