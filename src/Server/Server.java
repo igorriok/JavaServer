@@ -91,7 +91,7 @@ public class Server {
                         if (shipList != null) {
                             shipList.forEach((k, v) -> {
 
-                                if(!k.equals(missleID.toString())) {
+                                if(!k.equals(Integer.toString(missleID))) {
 
                                     double lat1 = Math.toRadians(missle.getLat());
                                     double lon1 = Math.toRadians(missle.getLon());

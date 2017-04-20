@@ -16,7 +16,7 @@ public class Missle {
         this.life = life;
     }
     
-    public double getID() {
+    public int getID() {
         return ID;
     }
     
