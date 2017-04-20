@@ -37,7 +37,7 @@ public class Fishies extends Thread {
             pstmt.setDouble(2, points);
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            System.out.println("Cant add record " + e.getMessage());
         }
     }
     
@@ -62,26 +62,24 @@ public class Fishies extends Thread {
     public int[] getPoints(String token) {
         int[] points = new int[2];
         String sql = "SELECT " + Entries.PET_POINTS + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_TOKEN + " = " + token + ";";
-        if (check(token)) {
-            try {
-                PreparedStatement pstmt = conn.prepareStatement(sql);
-                ResultSet rs = pstmt.executeQuery();
-                points[0] = rs.getInt(Entries.PET_POINTS);
-                points[1] = rs.getInt(Entries.PET_ID);
-            } catch (SQLException e) {
-                System.out.println(e.getMessage());
-            }
-            return points;
-        } else {
-            insert(token, 0);
-        }
+        
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
             ResultSet rs = pstmt.executeQuery();
             points[0] = rs.getInt(Entries.PET_POINTS);
             points[1] = rs.getInt(Entries.PET_ID);
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            System.out.println("No such record " + e.getMessage());
+        } finally {
+            insert(token, 0);
+            try {
+                PreparedStatement pstmt = conn.prepareStatement(sql);
+                ResultSet rs = pstmt.executeQuery();
+                points[0] = rs.getInt(Entries.PET_POINTS);
+                points[1] = rs.getInt(Entries.PET_ID);
+            } catch (SQLException e) {
+                System.out.println("Record hasn't been added " + e.getMessage());
+            }
         }
         return points;
     }
