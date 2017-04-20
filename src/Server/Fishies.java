@@ -62,7 +62,6 @@ public class Fishies extends Thread {
     public int[] getPoints(String token) {
         int[] points = new int[2];
         String sql = "SELECT * " + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_TOKEN + " = ?;";
-        
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, token);
@@ -71,17 +70,16 @@ public class Fishies extends Thread {
             points[1] = rs.getInt(Entries.PET_ID);
         } catch (SQLException e) {
             System.out.println("No such record " + e.getMessage());
-        } finally {
             insert(token, 0);
             try {
                 PreparedStatement pstmt = conn.prepareStatement(sql);
+                pstmt.setString(1, token);
                 ResultSet rs = pstmt.executeQuery();
                 points[0] = rs.getInt(Entries.PET_POINTS);
                 points[1] = rs.getInt(Entries.PET_ID);
             } catch (SQLException e) {
                 System.out.println("Record hasn't been added " + e.getMessage());
             }
-        }
         return points;
     }
     
