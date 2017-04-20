@@ -13,7 +13,7 @@ final class Deal {
     static final class Entries {
 
         // SQLite connection string
-        final static String url = "jdbc:sqlite:/home/aqua.db";
+        final static String url = "jdbc:sqlite:/data/aqua.db";
         
         final static String PET_ID = "ID";
 
