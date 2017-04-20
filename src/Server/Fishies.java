@@ -12,7 +12,6 @@ public class Fishies extends Thread {
     }
 
     public void run() {
-
         try {
             conn = DriverManager.getConnection(Entries.url);
             Statement stmt = conn.createStatement();
@@ -41,18 +40,21 @@ public class Fishies extends Thread {
         }
     }
     
-    public void updatePoints(String token, int points) {
-        String sql = "SELECT " + Entries.PET_POINTS + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_TOKEN + " = " + token + ";";
+    public void updatePoints(int ID, int points) {
+        String sql = "SELECT " + Entries.PET_POINTS + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_ID + " = ?;";
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, ID);
             ResultSet rs = pstmt.executeQuery();
             points = points + rs.getInt(Entries.PET_POINTS);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
-        sql = "UPDATE " + Entries.TABLE_NAME + " SET " + Entries.PET_POINTS + " = " + points + " WHERE " + Entries.PET_TOKEN + " = " + token + ";";
+        sql = "UPDATE " + Entries.TABLE_NAME + " SET " + Entries.PET_POINTS + " = ? WHERE " + Entries.PET_ID + " = ?;";
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, points);
+            pstmt.setInt(2, ID);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -82,21 +84,5 @@ public class Fishies extends Thread {
             }
         }
         return points;
-    }
-    
-    public Boolean check(String token) {
-        
-        String sql = "SELECT EXISTS (SELECT " + 1 + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_TOKEN + " = " + token + " LIMIT 1);";
-        try {
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.getInt(1) > 0) {
-                return true;
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return false;
-        }
-        return false;
     }
 }
