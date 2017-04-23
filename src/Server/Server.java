@@ -25,8 +25,9 @@ public class Server {
         
         double R = 6378.1; //Radius of the Earth km
         double d = 0.07; //500km/h in 0.5 sec
-        ConcurrentLinkedQueue<Missle> missleList  = new ConcurrentLinkedQueue<Missle>();
+        ConcurrentLinkedQueue<Missile> missileList  = new ConcurrentLinkedQueue<Missile>();
         ConcurrentHashMap<String, Ship> shipList = new ConcurrentHashMap<String, Ship>();
+        ConcurrentHashMap<String, ClientWorker> clients = new ConcurrentHashMap<>();
 
         shipList.put("north", new Ship("north", 47.5, 29, LocalTime.now()));
         shipList.put("south", new Ship("south", 46.5, 29, LocalTime.now()));
@@ -44,92 +45,98 @@ public class Server {
 
                 System.out.println("checking lifes" + shipList.toString());
 
-                    shipList.forEach((k, v) -> {
-                        System.out.println(ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()));
-                        if (ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()) >= 20) {
-                            shipList.remove(k);
-                            System.out.println("removed:" + k);
-                        }
-                    });
+                shipList.forEach((k, v) -> {
+                    System.out.println(ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()));
+                    if (ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()) >= 20) {
+                        shipList.remove(k);
+                        System.out.println("removed:" + k);
+                    }
+                });
 
             }
         }, 60000, 60000);
 
-        Timer misslePosCalc = new Timer();
-        misslePosCalc.scheduleAtFixedRate(new TimerTask() {
+        Timer missilePosCalc = new Timer();
+        missilePosCalc.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
 
 
-                    for(Missle missle : missleList) {
-                        double bearing = Math.toRadians(missle.getBearing()); //Bearing is 90 degrees converted to radians.
+                for(Missile missile : missileList) {
+                    double bearing = Math.toRadians(missile.getBearing()); //Bearing is 90 degrees converted to radians.
 
-                        double lat1 = Math.toRadians(missle.getLat()); //Current lat point converted to radians
-                        double lon1 = Math.toRadians(missle.getLon()); //Current lon point converted to radians
+                    double lat1 = Math.toRadians(missile.getLat()); //Current lat point converted to radians
+                    double lon1 = Math.toRadians(missile.getLon()); //Current lon point converted to radians
 
-                        double lat2 = Math.asin( sin(lat1)* cos(d/R) + cos(lat1)* sin(d/R)* cos(bearing));
+                    double lat2 = Math.asin( sin(lat1)* cos(d/R) + cos(lat1)* sin(d/R)* cos(bearing));
 
-                        double lon2 = lon1 + Math.atan2(sin(bearing)* sin(d/R)* cos(lat1), cos(d/R)- sin(lat1)* sin(lat2));
+                    double lon2 = lon1 + Math.atan2(sin(bearing)* sin(d/R)* cos(lat1), cos(d/R)- sin(lat1)* sin(lat2));
 
-                        lat2 = Math.toDegrees(lat2);
-                        lon2 = Math.toDegrees(lon2);
-                        
-                        missle.setLat(lat2);
-                        missle.setLon(lon2);
-                    }
+                    lat2 = Math.toDegrees(lat2);
+                    lon2 = Math.toDegrees(lon2);
+
+                    missile.setLat(lat2);
+                    missile.setLon(lon2);
+                }
 
             }
         }, 500, 500);
         
-        Timer missleCheck = new Timer();
-        missleCheck.scheduleAtFixedRate(new TimerTask() {
+        Timer missileCheck = new Timer();
+        missileCheck.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
 
-                    for(Missle missle : missleList) {
+                for(Missile missile : missileList) {
 
-                        int missleID = missle.getID();
-                            shipList.forEach((k, v) -> {
+                    int missleID = missile.getID();
+                        shipList.forEach((k, v) -> {
 
-                                if(!k.equals(Integer.toString(missleID))) {
+                            if(!k.equals(Integer.toString(missleID))) {
 
-                                    double lat1 = Math.toRadians(missle.getLat());
-                                    double lon1 = Math.toRadians(missle.getLon());
+                                double lat1 = Math.toRadians(missile.getLat());
+                                double lon1 = Math.toRadians(missile.getLon());
 
-                                    double lat2 = Math.toRadians(v.getLat());
-                                    double lon2 = Math.toRadians(v.getLon());
-                                    // P
-                                    double rho1 = R * cos(lat1);
-                                    double z1 = R * sin(lat1);
-                                    double x1 = rho1 * cos(lon1);
-                                    double y1 = rho1 * sin(lon1);
-                                    // Q
-                                    double rho2 = R * cos(lat2);
-                                    double z2 = R * sin(lat2);
-                                    double x2 = rho2 * cos(lon2);
-                                    double y2 = rho2 * sin(lon2);
-                                    // Dot product
-                                    double dot = (x1 * x2 + y1 * y2 + z1 * z2);
-                                    double cos_theta = dot / (R * R);
+                                double lat2 = Math.toRadians(v.getLat());
+                                double lon2 = Math.toRadians(v.getLon());
+                                // P
+                                double rho1 = R * cos(lat1);
+                                double z1 = R * sin(lat1);
+                                double x1 = rho1 * cos(lon1);
+                                double y1 = rho1 * sin(lon1);
+                                // Q
+                                double rho2 = R * cos(lat2);
+                                double z2 = R * sin(lat2);
+                                double x2 = rho2 * cos(lon2);
+                                double y2 = rho2 * sin(lon2);
+                                // Dot product
+                                double dot = (x1 * x2 + y1 * y2 + z1 * z2);
+                                double cos_theta = dot / (R * R);
 
-                                    double theta = acos(cos_theta);
-                                    // Distance in Metres
-                                    double dist = R * theta;
+                                double theta = acos(cos_theta);
+                                // Distance in Metres
+                                double dist = R * theta;
 
-                                    if (dist <= 0.4) {
-                                        missleList.remove(missle);
-                                        //TODO: add points to shooted ID
-                                        db.updatePoints(missleID, 1);
-                                    }
+                                if (dist <= 0.4) {
+                                    missileList.remove(missile);
+                                    //TODO: add points to shooted ID
+                                    db.updatePoints(missleID, 1);
+                                    //create points update
+                                    ArrayList<String> message = new ArrayList<>();
+                                    message.add(ClientWorker.points);
+                                    message.add(Integer.toString(db.getPointsByID(missleID)));
+                                    //send points through clientWorker by ID
+                                    clients.get(Integer.toString(missleID)).sendMessage(message);
                                 }
+                            }
 
-                                if (ChronoUnit.MINUTES.between(missle.getLife(), LocalTime.now()) >= 20) {
-                                    missleList.remove(missle);
-                                    System.out.println("removed:" + missle);
-                                }
-                            });
+                            if (ChronoUnit.MINUTES.between(missile.getLife(), LocalTime.now()) >= 20) {
+                                missileList.remove(missile);
+                                System.out.println("removed:" + missile);
+                            }
+                        });
 
-                    }
+                }
 
             }
         }, 500, 500);
@@ -153,13 +160,13 @@ public class Server {
 
             try {
                 //server.accept returns a client connection
-                w = new ClientWorker(server.accept(), shipList, db, missleList);
+                w = new ClientWorker(server.accept(), shipList, db, missileList, clients);
                 Thread t = new Thread(w);
                 t.start();
                 System.out.println("Client connected");
             } catch (IOException e) {
                 System.out.println("Cant connect");
-                System.exit(-1);
+                //System.exit(-1);
             }
         }
 
@@ -169,28 +176,42 @@ public class Server {
     static class ClientWorker implements Runnable {
 
         private Socket client;
-        private final String id = "id";
-        private final String shipMsg = "ship";
-        private final String missle = "missle";
-        private final String missleArray = "missleArray";
+        private final static String id = "id";
+        private final static String shipMsg = "ship";
+        private final static String missile = "missile";
+        private final static String missileArray = "missileArray";
+        private final static String points = "points";
         private ArrayList<String> line;
         private ArrayList<String> response;
         private String head;
         private Fishies db;
         private ConcurrentHashMap<String, Ship> shipsHashMap;
-        private ConcurrentLinkedQueue<Missle> missleList;
+        private ConcurrentLinkedQueue<Missile> missileList;
+        private ConcurrentHashMap<String, ClientWorker> clients = new ConcurrentHashMap<>();
+        ObjectOutputStream out;
 
         //Constructor
-        ClientWorker(Socket client, ConcurrentHashMap ships, Fishies db, ConcurrentLinkedQueue missles) {
-            this.missleList = missles;
+        ClientWorker(Socket client, ConcurrentHashMap<String, Ship> ships, Fishies db, ConcurrentLinkedQueue<Missile> missiles, ConcurrentHashMap<String, ClientWorker> clients) {
+            this.missileList = missiles;
             this.client = client;
             this.shipsHashMap = ships;
             this.db = db;
+            this.clients = clients;
+        }
+
+        void sendMessage(ArrayList message) {
+            try {
+                out.writeObject(message);
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.out.println("Cant send message, " + e);
+            }
         }
 
         public void run() {
+
             ObjectInputStream in = null;
-            ObjectOutputStream out = null;
+            out = null;
 
             System.out.println("Client running");
 
@@ -210,7 +231,7 @@ public class Server {
                             case shipMsg:
                                 shipsHashMap.put(line.get(1), new Ship(line.get(2), Double.parseDouble(line.get(3)),
                                         Double.parseDouble(line.get(4)), LocalTime.now()));
-                                System.out.println("Added:" + line.get(1));
+                                System.out.println("Client Worker: Added ID:" + line.get(1));
 
                                 response = new ArrayList<>();
                                 response.add(shipMsg);
@@ -227,24 +248,31 @@ public class Server {
                             case id:
                                 response = new ArrayList<>();
                                 response.add(id);
-                                int[] points = db.getPoints(line.get(1));
-                                response.add(Integer.toString(points[0]));
-                                response.add(Integer.toString(points[1]));
+                                int ID = db.getID(line.get(1));
+                                //add ID
+                                response.add(Integer.toString(db.getID(line.get(1))));
+                                out.writeObject(response);
+                                //Add this ClientWorker to list
+                                clients.put(Integer.toString(ID), this);
+                                System.out.println("Sent: " + response.toString());
+                                response = new ArrayList<>();
+                                response.add(points);
+                                response.add(Integer.toString(db.getPointsByID(ID)));
                                 out.writeObject(response);
                                 System.out.println("Sent: " + response.toString());
                                 break;
-                            case missle:
-                                missleList.add(new Missle(Integer.parseInt(line.get(1)), Double.parseDouble(line.get(2)), Double.parseDouble(line.get(3)),
+                            case missile:
+                                missileList.add(new Missile(Integer.parseInt(line.get(1)), Double.parseDouble(line.get(2)), Double.parseDouble(line.get(3)),
                                         Double.parseDouble(line.get(4)), LocalTime.now()));
-                                System.out.println("Received missle");
+                                System.out.println("Received missile");
                                 break;
-                            case missleArray:
+                            case missileArray:
                                 response = new ArrayList<>();
-                                response.add("missleArray");
-                                for (Missle missle : missleList) {
-                                    response.add(Double.toString(missle.getBearing()));
-                                    response.add(Double.toString(missle.getLat()));
-                                    response.add(Double.toString(missle.getLon()));
+                                response.add("missileArray");
+                                for (Missile missile : missileList) {
+                                    response.add(Double.toString(missile.getBearing()));
+                                    response.add(Double.toString(missile.getLat()));
+                                    response.add(Double.toString(missile.getLon()));
                                 }
                                 out.writeObject(response);
                                 System.out.println("Sent: " + response.toString());

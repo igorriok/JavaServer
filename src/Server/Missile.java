@@ -2,13 +2,13 @@ package Server;
 
 import java.time.LocalTime;
 
-public class Missle {
+public class Missile {
 
     private int ID;
     private double lat, lon, bearing;
     private LocalTime life;
 
-    public Missle(int ID, double bearing, double lat, double lon, LocalTime life) {
+    Missile(int ID, double bearing, double lat, double lon, LocalTime life) {
         this.ID = ID;
         this.bearing = bearing;
         this.lat = lat;
@@ -16,35 +16,35 @@ public class Missle {
         this.life = life;
     }
     
-    public int getID() {
+    int getID() {
         return ID;
     }
     
-    public double getBearing() {
+    double getBearing() {
         return bearing;
     }
 
-    public double getLat() {
+    double getLat() {
         return lat;
     }
 
-    public double getLon() {
+    double getLon() {
         return lon;
     }
 
-    public LocalTime getLife(){
+    LocalTime getLife(){
         return life;
     }
 
-    public void setLat(double lat) {
+    void setLat(double lat) {
         this.lat = lat;
     }
 
-    public void setLon(double lon) {
+    void setLon(double lon) {
         this.lon = lon;
     }
 
-    public void setLife(LocalTime life) {
+    void setLife(LocalTime life) {
         this.life = life;
     }
 }

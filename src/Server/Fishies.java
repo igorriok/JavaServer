@@ -8,7 +8,7 @@ public class Fishies extends Thread {
 
     Connection conn;
 
-    public Fishies() {
+    Fishies() {
     }
 
     public void run() {
@@ -27,7 +27,7 @@ public class Fishies extends Thread {
      * @param token received from app
      * @param points default is 0
      */
-    public void insert(String token, int points) {
+    private void insert(String token, int points) {
 
         String sql = "INSERT INTO " + Entries.TABLE_NAME + "(" + Entries.PET_TOKEN + "," + Entries.PET_POINTS + ") VALUES(?,?);";
         try {
@@ -40,7 +40,7 @@ public class Fishies extends Thread {
         }
     }
     
-    public void updatePoints(int ID, int points) {
+    void updatePoints(int ID, int points) {
         String sql = "SELECT " + Entries.PET_POINTS + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_ID + " = ?;";
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -61,15 +61,14 @@ public class Fishies extends Thread {
         }
     }
 
-    public int[] getPoints(String token) {
-        int[] points = new int[2];
+    int getID(String token) {
+        int ID = 0;
         String sql = "SELECT * " + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_TOKEN + " = ?;";
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, token);
             ResultSet rs = pstmt.executeQuery();
-            points[0] = rs.getInt(Entries.PET_POINTS);
-            points[1] = rs.getInt(Entries.PET_ID);
+            ID = rs.getInt(Entries.PET_ID);
         } catch (SQLException e) {
             System.out.println("No such record " + e.getMessage());
             insert(token, 0);
@@ -77,11 +76,24 @@ public class Fishies extends Thread {
                 PreparedStatement pstmt = conn.prepareStatement(sql);
                 pstmt.setString(1, token);
                 ResultSet rs = pstmt.executeQuery();
-                points[0] = rs.getInt(Entries.PET_POINTS);
-                points[1] = rs.getInt(Entries.PET_ID);
+                ID = rs.getInt(Entries.PET_ID);
             } catch (SQLException error) {
                 System.out.println("Record hasn't been added " + error.getMessage());
             }
+        }
+        return ID;
+    }
+
+    int getPointsByID(int ID) {
+        int points = 0;
+        String sql = "SELECT * " + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_ID + " = ?;";
+        try {
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, ID);
+            ResultSet rs = pstmt.executeQuery();
+            points = rs.getInt(Entries.PET_POINTS);
+        } catch (SQLException e) {
+            System.out.println("No such record " + e.getMessage());
         }
         return points;
     }

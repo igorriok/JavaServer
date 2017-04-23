@@ -8,26 +8,26 @@ public class Ship {
     private double lat, lon;
     private LocalTime life;
 
-    public Ship (String ShipName, double lat, double lon, LocalTime life) {
+    Ship(String ShipName, double lat, double lon, LocalTime life) {
         this.ShipName = ShipName;
         this.lat = lat;
         this.lon = lon;
         this.life = life;
     }
 
-    public String getName() {
+    String getName() {
         return ShipName;
     }
     
-    public double getLat() {
+    double getLat() {
         return lat;
     }
 
-    public double getLon() {
+    double getLon() {
         return lon;
     }
 
-    public LocalTime getLife(){
+    LocalTime getLife(){
         return life;
     }
 
