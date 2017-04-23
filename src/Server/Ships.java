@@ -33,6 +33,7 @@ public class Ships extends Thread {
         shipList.put("south", new Ship("south", 46.5, 29, LocalTime.now()));
         shipList.put("west", new Ship("west", 47, 28.1, LocalTime.now()));
         shipList.put("est", new Ship("est", 47, 29.6, LocalTime.now()));
+        shipList.put("colonita", new Ship("colonita", 47.040885, 28.947728, LocalTime.now()));
     }
 
 }

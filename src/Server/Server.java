@@ -25,10 +25,15 @@ public class Server {
         
         double R = 6378.1; //Radius of the Earth km
         double d = 0.07; //500km/h in 0.5 sec
-        
-        Ships ships = new Ships();
-        ships.start();
-        
+        ConcurrentLinkedQueue<Missle> missleList  = new ConcurrentLinkedQueue<Missle>();
+        ConcurrentHashMap<String, Ship> shipList = new ConcurrentHashMap<String, Ship>();
+
+        shipList.put("north", new Ship("north", 47.5, 29, LocalTime.now()));
+        shipList.put("south", new Ship("south", 46.5, 29, LocalTime.now()));
+        shipList.put("west", new Ship("west", 47, 28.1, LocalTime.now()));
+        shipList.put("est", new Ship("est", 47, 29.6, LocalTime.now()));
+        shipList.put("colonita", new Ship("colonita", 47.040885, 28.947728, LocalTime.now()));
+
         Fishies db = new Fishies();
         db.run();
 
@@ -36,30 +41,26 @@ public class Server {
         shipLifeChecker.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                ConcurrentHashMap<String, Ship> shipList = ships.getShips();
+
                 System.out.println("checking lifes" + shipList.toString());
-                if (shipList != null) {
+
                     shipList.forEach((k, v) -> {
                         System.out.println(ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()));
-                        if (ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()) >= 1) {
+                        if (ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()) >= 20) {
                             shipList.remove(k);
                             System.out.println("removed:" + k);
                         }
                     });
-                }
+
             }
         }, 60000, 60000);
-        
-        Missles missles = new Missles();
-        missles.start();
 
-        ConcurrentLinkedQueue<Missle> missleList = missles.getMissles();
-        
         Timer misslePosCalc = new Timer();
         misslePosCalc.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                if (missleList != null) {
+
+
                     for(Missle missle : missleList) {
                         double bearing = Math.toRadians(missle.getBearing()); //Bearing is 90 degrees converted to radians.
 
@@ -76,7 +77,7 @@ public class Server {
                         missle.setLat(lat2);
                         missle.setLon(lon2);
                     }
-                }
+
             }
         }, 500, 500);
         
@@ -84,11 +85,10 @@ public class Server {
         missleCheck.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                ConcurrentHashMap<String, Ship> shipList = ships.getShips();
-                if (missleList != null) {
+
                     for(Missle missle : missleList) {
+
                         int missleID = missle.getID();
-                        if (shipList != null) {
                             shipList.forEach((k, v) -> {
 
                                 if(!k.equals(Integer.toString(missleID))) {
@@ -116,21 +116,21 @@ public class Server {
                                     // Distance in Metres
                                     double dist = R * theta;
 
-                                    if (dist <= 0.004) {
+                                    if (dist <= 0.4) {
                                         missleList.remove(missle);
                                         //TODO: add points to shooted ID
                                         db.updatePoints(missleID, 1);
                                     }
                                 }
 
-                                if (ChronoUnit.MINUTES.between(missle.getLife(), LocalTime.now()) >= 2) {
+                                if (ChronoUnit.MINUTES.between(missle.getLife(), LocalTime.now()) >= 20) {
                                     missleList.remove(missle);
                                     System.out.println("removed:" + missle);
                                 }
                             });
-                        }
+
                     }
-                }
+
             }
         }, 500, 500);
 
@@ -153,7 +153,7 @@ public class Server {
 
             try {
                 //server.accept returns a client connection
-                w = new ClientWorker(server.accept(), ships, db, missles);
+                w = new ClientWorker(server.accept(), shipList, db, missleList);
                 Thread t = new Thread(w);
                 t.start();
                 System.out.println("Client connected");
@@ -173,20 +173,18 @@ public class Server {
         private final String shipMsg = "ship";
         private final String missle = "missle";
         private final String missleArray = "missleArray";
-        private Ships ships;
         private ArrayList<String> line;
         private ArrayList<String> response;
         private String head;
         private Fishies db;
-        private Missles missles;
-        ConcurrentHashMap<String, Ship> shipsHashMap;
-        ConcurrentLinkedQueue<Missle> missleList;
+        private ConcurrentHashMap<String, Ship> shipsHashMap;
+        private ConcurrentLinkedQueue<Missle> missleList;
 
         //Constructor
-        ClientWorker(Socket client, Ships ships, Fishies db, Missles missles) {
-            this.missles = missles;
+        ClientWorker(Socket client, ConcurrentHashMap ships, Fishies db, ConcurrentLinkedQueue missles) {
+            this.missleList = missles;
             this.client = client;
-            this.ships = ships;
+            this.shipsHashMap = ships;
             this.db = db;
         }
 
@@ -203,18 +201,14 @@ public class Server {
 
                 System.out.println("Wait for messages");
 
-                shipsHashMap = ships.getShips();
-                missleList = missles.getMissles();
-
                 while((line = (ArrayList) in.readObject()) != null) {
-                    System.out.println("Receiving: " + line.toString());
-                    //line = (ArrayList) in.readObject();
+
                     if(line.size() != 0) {
                         head = line.get(0);
                         System.out.println("Received: " + line.toString() + "\nTime: " + LocalDateTime.now());
                         switch (head) {
                             case shipMsg:
-                                ships.addShip(line.get(1), new Ship(line.get(2), Double.parseDouble(line.get(3)),
+                                shipsHashMap.put(line.get(1), new Ship(line.get(2), Double.parseDouble(line.get(3)),
                                         Double.parseDouble(line.get(4)), LocalTime.now()));
                                 System.out.println("Added:" + line.get(1));
 
@@ -240,8 +234,9 @@ public class Server {
                                 System.out.println("Sent: " + response.toString());
                                 break;
                             case missle:
-                                missles.addMissle(new Missle(Integer.parseInt(line.get(1)), Double.parseDouble(line.get(2)), Double.parseDouble(line.get(3)),
+                                missleList.add(new Missle(Integer.parseInt(line.get(1)), Double.parseDouble(line.get(2)), Double.parseDouble(line.get(3)),
                                         Double.parseDouble(line.get(4)), LocalTime.now()));
+                                System.out.println("Received missle");
                                 break;
                             case missleArray:
                                 response = new ArrayList<>();
@@ -251,6 +246,8 @@ public class Server {
                                     response.add(Double.toString(missle.getLat()));
                                     response.add(Double.toString(missle.getLon()));
                                 }
+                                out.writeObject(response);
+                                System.out.println("Sent: " + response.toString());
                                 break;
                             default:
                                 break;
