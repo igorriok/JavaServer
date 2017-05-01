@@ -29,8 +29,8 @@ public class Server {
         ConcurrentLinkedQueue<Explosion> expList  = new ConcurrentLinkedQueue<Explosion>();
 
 
-        shipList.put("north", new Ship("north", 47.5, 29, LocalTime.now()));
-        shipList.put("south", new Ship("south", 46.5, 29, LocalTime.now()));
+        shipList.put("north", new Ship("north", 47.5, 28.8827, LocalTime.now()));
+        shipList.put("south", new Ship("south", 46.5, 28.8827, LocalTime.now()));
         shipList.put("west", new Ship("west", 47, 28.1, LocalTime.now()));
         shipList.put("est", new Ship("est", 47, 29.6, LocalTime.now()));
         shipList.put("colonita", new Ship("colonita", 47.040885, 28.947728, LocalTime.now()));
@@ -179,9 +179,7 @@ public class Server {
                 //System.exit(-1);
             }
         }
-
     }
-
 
     static class ClientWorker implements Runnable {
 
