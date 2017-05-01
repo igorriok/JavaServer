@@ -241,9 +241,15 @@ public class Server {
                         System.out.println("Received: " + line.toString() + "\nTime: " + LocalDateTime.now());
                         switch (head) {
                             case shipMsg:
-                                shipsHashMap.put(line.get(1), new Ship(line.get(2), Double.parseDouble(line.get(3)),
-                                        Double.parseDouble(line.get(4)), LocalTime.now()));
-                                System.out.println("Client Worker: Added ID:" + line.get(1));
+                                if (shipsHashMap.containsKey(line.get(1))) {
+                                    shipsHashMap.replace(line.get(1), new Ship(line.get(2), Double.parseDouble(line.get(3)),
+                                            Double.parseDouble(line.get(4)), LocalTime.now()));
+                                    System.out.println("Client Worker: updated ship:" + line.get(1));
+                                } else {
+                                    shipsHashMap.put(line.get(1), new Ship(line.get(2), Double.parseDouble(line.get(3)),
+                                            Double.parseDouble(line.get(4)), LocalTime.now()));
+                                    System.out.println("Client Worker: Added ship:" + line.get(1));
+                                }
 
                                 response = new ArrayList<>();
                                 response.add(shipMsg);
