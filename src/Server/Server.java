@@ -29,8 +29,8 @@ public class Server {
         ConcurrentLinkedQueue<Explosion> expList  = new ConcurrentLinkedQueue<Explosion>();
 
 
-        shipList.put("north", new Ship("north", 47.5, 29, LocalTime.now()));
-        shipList.put("south", new Ship("south", 46.5, 29, LocalTime.now()));
+        shipList.put("north", new Ship("north", 47.5, 28.8827, LocalTime.now()));
+        shipList.put("south", new Ship("south", 46.5, 28.8827, LocalTime.now()));
         shipList.put("west", new Ship("west", 47, 28.1, LocalTime.now()));
         shipList.put("est", new Ship("est", 47, 29.6, LocalTime.now()));
         shipList.put("colonita", new Ship("colonita", 47.040885, 28.947728, LocalTime.now()));
@@ -179,9 +179,7 @@ public class Server {
                 //System.exit(-1);
             }
         }
-
     }
-
 
     static class ClientWorker implements Runnable {
 
@@ -243,9 +241,15 @@ public class Server {
                         System.out.println("Received: " + line.toString() + "\nTime: " + LocalDateTime.now());
                         switch (head) {
                             case shipMsg:
-                                shipsHashMap.put(line.get(1), new Ship(line.get(2), Double.parseDouble(line.get(3)),
-                                        Double.parseDouble(line.get(4)), LocalTime.now()));
-                                System.out.println("Client Worker: Added ID:" + line.get(1));
+                                if (shipsHashMap.containsKey(line.get(1))) {
+                                    shipsHashMap.replace(line.get(1), new Ship(line.get(2), Double.parseDouble(line.get(3)),
+                                            Double.parseDouble(line.get(4)), LocalTime.now()));
+                                    System.out.println("Client Worker: updated ship:" + line.get(1));
+                                } else {
+                                    shipsHashMap.put(line.get(1), new Ship(line.get(2), Double.parseDouble(line.get(3)),
+                                            Double.parseDouble(line.get(4)), LocalTime.now()));
+                                    System.out.println("Client Worker: Added ship:" + line.get(1));
+                                }
 
                                 response = new ArrayList<>();
                                 response.add(shipMsg);
