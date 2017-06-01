@@ -27,7 +27,7 @@ public class Fishies extends Thread {
      * @param token received from app
      * @param points default is 0
      */
-    private void insert(String token, int points) {
+    private synchronized void insert(String token, int points) {
 
         String sql = "INSERT INTO " + Entries.TABLE_NAME + "(" + Entries.PET_TOKEN + "," + Entries.PET_POINTS + ") VALUES(?,?);";
         try {
@@ -40,7 +40,7 @@ public class Fishies extends Thread {
         }
     }
     
-    void updatePoints(int ID, int points) {
+    synchronized void updatePoints(int ID, int points) {
         String sql = "SELECT " + Entries.PET_POINTS + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_ID + " = ?;";
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -61,7 +61,7 @@ public class Fishies extends Thread {
         }
     }
 
-    int getID(String token) {
+    synchronized int getID(String token) {
         int ID = 0;
         String sql = "SELECT * " + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_TOKEN + " = ?;";
         try {
@@ -84,7 +84,7 @@ public class Fishies extends Thread {
         return ID;
     }
 
-    int getPointsByID(int ID) {
+    synchronized int getPointsByID(int ID) {
         int points = 0;
         String sql = "SELECT * " + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_ID + " = ?;";
         try {
