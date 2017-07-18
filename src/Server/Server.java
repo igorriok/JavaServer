@@ -24,20 +24,23 @@ public class Server {
         //String insert = scanner.nextLine();
         
         double R = 6378.1; //Radius of the Earth km
-        double d = 0.28; //2000km/h in 0.5 sec
+        double d = 0.05; //2000km/h
         ConcurrentLinkedQueue<Missile> missileList  = new ConcurrentLinkedQueue<Missile>();
         ConcurrentHashMap<String, Ship> shipList = new ConcurrentHashMap<String, Ship>();
         ConcurrentHashMap<String, ClientWorker> clients = new ConcurrentHashMap<>();
         ConcurrentLinkedQueue<Explosion> expList  = new ConcurrentLinkedQueue<Explosion>();
-        double hitRadius = 0.1;
-        ExecutorService executor = Executors.newFixedThreadPool(4);
+        double hitRadius = 0.05;
+        ExecutorService executor = Executors.newCachedThreadPool();
+        ExecutorService clientPool = Executors.newCachedThreadPool();
 
-        shipList.put("north", new Ship("north", 47.5, 28.8827, LocalTime.now()));
-        shipList.put("south", new Ship("south", 46.5, 28.8827, LocalTime.now()));
-        shipList.put("west", new Ship("west", 47, 28.1, LocalTime.now()));
-        shipList.put("est", new Ship("est", 47, 29.6, LocalTime.now()));
-        shipList.put("colonita", new Ship("colonita", 47.040885, 28.947728, LocalTime.now()));
+        //fot testing
+        shipList.put("north", new Ship("north", 47.5, 28.8827, LocalTime.now(), 0));
+        shipList.put("south", new Ship("south", 46.5, 28.8827, LocalTime.now(), 0));
+        shipList.put("west", new Ship("west", 47, 28.1, LocalTime.now(), 0));
+        shipList.put("est", new Ship("est", 47, 29.6, LocalTime.now(), 0));
+        shipList.put("colonita", new Ship("colonita", 47.040885, 28.947728, LocalTime.now(), 0));
 
+        //initialize database thread
         Fishies db = new Fishies();
         db.run();
 
@@ -49,8 +52,8 @@ public class Server {
                 System.out.println("checking lifes" + shipList.toString());
 
                 shipList.forEach((k, v) -> {
-                    System.out.println(ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()));
-                    if (ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()) >= 20) {
+                    System.out.println(k + " last update " + ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()) + " minutes ago");
+                    if (ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()) >= 3) {
                         shipList.remove(k);
                         System.out.println("removed:" + k);
                     }
@@ -84,9 +87,9 @@ public class Server {
                     double lat1 = Math.toRadians(missile.getLat()); //Current lat point converted to radians
                     double lon1 = Math.toRadians(missile.getLon()); //Current lon point converted to radians
 
-                    double lat2 = Math.asin( sin(lat1)* cos(d/R) + cos(lat1)* sin(d/R)* cos(bearing));
+                    double lat2 = Math.asin( sin(lat1) * cos(d/R) + cos(lat1) * sin(d/R) * cos(bearing));
 
-                    double lon2 = lon1 + Math.atan2(sin(bearing)* sin(d/R)* cos(lat1), cos(d/R)- sin(lat1)* sin(lat2));
+                    double lon2 = lon1 + Math.atan2(sin(bearing) * sin(d/R) * cos(lat1), cos(d/R) - sin(lat1) * sin(lat2));
 
                     lat2 = Math.toDegrees(lat2);
                     lon2 = Math.toDegrees(lon2);
@@ -95,16 +98,18 @@ public class Server {
                     missile.setLon(lon2);
                 }
             }
-        }, 500, 500);
+        }, 100, 100);
         
-        Thread missileCheck = new Thread(() -> {
-
-            while (true) {
+        Timer missileCheck = new Timer();
+        missileCheck.scheduleAtFixedRate(new TimerTask() {
+            ClientWorker fireID;
+            ClientWorker hitedID;
+            @Override
+            public void run() {
                 for (Missile missile : missileList) {
                     executor.execute(new Runnable() {
                         @Override
                         public void run() {
-
                             int missileID = missile.getID();
                             shipList.forEach((k, v) -> {
 
@@ -132,44 +137,48 @@ public class Server {
                                     double theta = acos(cos_theta);
                                     // Distance in Metres
                                     double dist = R * theta;
-                                    System.out.println("checked");
-
+                                    //System.out.println("checked");
+                                    //check if missile is in hit radius and notify all participants
                                     if (dist <= hitRadius) {
-                                        expList.add(new Explosion(missileID, missile.getLat(), missile.getLon(), LocalTime.now()));
-                                        if (missile != null) {
-                                            missileList.remove(missile);
-                                        }
-                                        //notify participants of hit
-                                        db.updatePoints(missileID, 1);
-                                        //create points update
-                                        ClientWorker fireID;
-                                        if ((fireID = clients.get(Integer.toString(missileID))) != null) {
-                                            ArrayList<String> message = new ArrayList<>();
-                                            message.add(ClientWorker.points);
-                                            message.add(Integer.toString(db.getPointsByID(missileID)));
-                                            //send points through clientWorker by ID
-                                            fireID.sendMessage(message);
-                                        }
-                                        //
-                                        ClientWorker hitedID;
-                                            if ((hitedID = clients.get(k)) != null) {
-                                            ArrayList<String> hit = new ArrayList<>();
-                                            hit.add("hit");
-                                            hitedID.sendMessage(hit);
+                                        missileList.remove(missile);
+                                        if (!v.getShield()) {
+                                            //add explosion to list
+                                            expList.add(new Explosion(missileID, missile.getLat(), missile.getLon(), LocalTime.now()));
+                                            //update points
+                                            db.updatePoints(missileID, 1);
+                                            //notify participants of hit
+                                            hitedID = clients.get(k);
+                                            fireID = clients.get(Integer.toString(missileID));
+                                            //create points update message to be sent to fired client
+                                            if (fireID != null) {
+                                                ArrayList<String> message = new ArrayList<>();
+                                                message.add(ClientWorker.points);
+                                                message.add(Integer.toString(db.getPointsByID(missileID)));
+                                                message.add(v.getName());
+                                                //send points through clientWorker by ID
+                                                fireID.sendMessage(message);
+
+                                                //create notification message to be sent to stricken player
+                                                if (hitedID != null) {
+                                                    ArrayList<String> hit = new ArrayList<>();
+                                                    hit.add("hit");
+                                                    hit.add((shipList.get(fireID)).getName());
+                                                    hitedID.sendMessage(hit);
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             });
+                            if (ChronoUnit.MINUTES.between(missile.getLife(), LocalTime.now()) >= 5 * 60) {
+                                missileList.remove(missile);
+                                System.out.println("removed:" + missile);
+                            }
                         }
                     });
-                    if (ChronoUnit.MINUTES.between(missile.getLife(), LocalTime.now()) >= 5 * 60) {
-                        missileList.remove(missile);
-                        System.out.println("removed:" + missile);
-                    }
                 }
             }
-        });
-        missileCheck.start();
+        }, 100, 100);
         
         Timer clientThreads = new Timer();
         clientThreads.scheduleAtFixedRate(new TimerTask() {
@@ -185,7 +194,7 @@ public class Server {
         ServerSocket server = null;
 
         try{
-            server = new ServerSocket(57349);
+            server = new ServerSocket(57349, 1000);
             System.out.println("Waiting for a client...");
 
         } catch (IOException e) {
@@ -193,15 +202,13 @@ public class Server {
             System.exit(-1);
         }
 
-        while(true){
+        while(true) {
 
             ClientWorker w;
-
             try {
                 //server.accept returns a client connection
                 w = new ClientWorker(server.accept(), shipList, db, missileList, clients, expList);
-                Thread t = new Thread(w);
-                t.start();
+                clientPool.execute(w);
                 System.out.println("Client connected");
             } catch (IOException e) {
                 System.out.println("Cant connect");
