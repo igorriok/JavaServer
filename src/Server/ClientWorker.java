@@ -5,20 +5,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.*;
+import java.util.concurrent.*;
+
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.LowLevelHttpRequest;
-import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
 
 public class ClientWorker implements Runnable {
 
@@ -31,14 +25,17 @@ public class ClientWorker implements Runnable {
     final static String points = "points";
     private ArrayList<String> line;
     private ArrayList<String> response;
-    private String head;
     private Fishies db;
     private ConcurrentHashMap<String, Ship> shipsHashMap;
     private ConcurrentLinkedQueue<Missile> missileList;
     private ConcurrentHashMap<String, ClientWorker> clients;
     private ConcurrentLinkedQueue<Explosion> expList;
-    ObjectOutputStream out;
-    int ID = 0;
+    private ObjectOutputStream out;
+    private int ID = 0;
+    private HttpTransport transport;
+    private JsonFactory jsonFactory;
+    private Double botLat, botLong;
+
 
     //Constructor
     ClientWorker(Socket client, ConcurrentHashMap<String, Ship> ships, Fishies db, ConcurrentLinkedQueue<Missile> missiles,
@@ -60,15 +57,30 @@ public class ClientWorker implements Runnable {
             System.out.println("Cant send message, " + e);
         }
     }
+    
+    public void setGoogleCon(HttpTransport transport, JsonFactory jsonFactory) {
+        this.transport = transport;
+        this.jsonFactory = jsonFactory;
+    }
 
     public void run() {
 
         ObjectInputStream in = null;
         out = null;
-        final HttpTransport transport = new NetHttpTransport();
-        final JsonFactory jsonFactory = new JacksonFactory();
 
         System.out.println("Client running");
+
+        Random rnd = new Random();
+        int botNr = rnd.nextInt(1000000);
+        
+        ScheduledExecutorService botScheduler = Executors.newScheduledThreadPool(1);
+        botScheduler.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                shipsHashMap.put(botNr + "", new Ship("Bot-" + botNr, botLat + rnd.nextInt(1),
+                        botLong + rnd.nextInt(1), LocalTime.now(), 0));
+            }
+        }, 30, 5 * 60, TimeUnit.SECONDS);
 
         try {
             in = new ObjectInputStream(client.getInputStream());
@@ -80,7 +92,7 @@ public class ClientWorker implements Runnable {
             while((line = (ArrayList) in.readObject()) != null) {
 
                 if(line.size() != 0) {
-                    head = line.get(0);
+                    String head = line.get(0);
                     //System.out.println("Received: " + line.toString() + "\nTime: " + LocalDateTime.now());
                     switch (head) {
                         case shipMsg:
@@ -92,6 +104,8 @@ public class ClientWorker implements Runnable {
                                 shipsHashMap.put(line.get(1), new Ship(line.get(2), Double.parseDouble(line.get(3)),
                                         Double.parseDouble(line.get(4)), LocalTime.now(), Double.parseDouble(line.get(5))));
                                 //System.out.println("Client Worker: Added ship:" + line.get(1));
+                                botLat = Double.parseDouble(line.get(3));
+                                botLong = Double.parseDouble(line.get(4));
                             }
 
                             response = new ArrayList<>();
@@ -110,7 +124,7 @@ public class ClientWorker implements Runnable {
                             break;
                         case id:
                             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
-                                .setAudience(Collections.singletonList("271455468141-r4lrggg5mh2knhq777k64m3ju784qkr5.apps.googleusercontent.com"))
+                                .setAudience(Collections.singletonList("653188213597-jll3ngrpn5b91b1ghn1vdnqhs3bi45s0.apps.googleusercontent.com"))
                                 // Or, if multiple clients access the backend:
                                 //.setAudience(Arrays.asList(CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3))
                                 .build();
@@ -190,12 +204,14 @@ public class ClientWorker implements Runnable {
 
         } catch (Exception e) {
             System.out.println("disconnected " + e);
+            botScheduler.shutdownNow();
         }
         finally {
             try {
                 in.close();
                 out.close();
                 client.close();
+                botScheduler.shutdownNow();
                 clients.remove(Integer.toString(ID));
                 System.out.println("Client closed");
             } catch (IOException ioe) {
