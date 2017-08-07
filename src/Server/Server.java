@@ -22,21 +22,28 @@ public class Server {
 
     public static void main(String[] args) throws IOException {
 
-        //Scanner scanner = new Scanner(System.in);
-        //String insert = scanner.nextLine();
-        
         double R = 6378.1; //Radius of the Earth km
         double d = 0.05; //2000km/h
+        //list of missiles
         ConcurrentLinkedQueue<Missile> missileList  = new ConcurrentLinkedQueue<Missile>();
+        //list of Ships
         ConcurrentHashMap<String, Ship> shipList = new ConcurrentHashMap<String, Ship>();
+        //list of socket clients
         ConcurrentHashMap<String, ClientWorker> clients = new ConcurrentHashMap<>();
+        //list of explosions
         ConcurrentLinkedQueue<Explosion> expList  = new ConcurrentLinkedQueue<Explosion>();
+        //hit radius in km
         double hitRadius = 0.05;
+        //executor for distance calculation tasks
         ExecutorService executor = Executors.newCachedThreadPool();
+        //executor for socket clients threads
         ExecutorService clientPool = Executors.newCachedThreadPool();
+        //Http and JsonFactory for json parsing and sending to Google API
         final HttpTransport transport = new NetHttpTransport();
         final JsonFactory jsonFactory = new JacksonFactory();
+        //executor for checking tasks
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
+        //Server socket
         ServerSocket server = null;
 
         //fot testing
@@ -51,24 +58,27 @@ public class Server {
         Fishies db = new Fishies();
         db.run();
 
+        //check ships' lifes, if old remove from list
         scheduler.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
 
                 System.out.println("checking lifes" + shipList.toString());
-
+                //loop ships to check lifes
                 shipList.forEach((k, v) -> {
                     System.out.println(k + " last update " + ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()) + " minutes ago");
                     if (ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()) >= 5) {
                         shipList.remove(k);
+                        v = null;
                         System.out.println("removed:" + k);
                     }
                 });
             }
         }, 0, 60, TimeUnit.SECONDS);
 
+        //check explosions lifes if old remove
         scheduler.scheduleAtFixedRate(() -> {
-
+            //loop explosions to ckeck lifes
             for (Explosion exp : expList) {
                 if (ChronoUnit.SECONDS.between(exp.getLife(), LocalTime.now()) >= 2) {
                     expList.remove(exp);
@@ -77,13 +87,14 @@ public class Server {
             }
         }, 500, 500, TimeUnit.MILLISECONDS);
 
+        //calculate new location for missiles
         scheduler.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-
+                //loop missiles and write new location
                 for(Missile missile : missileList) {
 
-                    double bearing = Math.toRadians(missile.getBearing()); //Bearing is 90 degrees converted to radians.
+                    double bearing = Math.toRadians(missile.getBearing()); //Bearing in degrees converted to radians.
 
                     double lat1 = Math.toRadians(missile.getLat()); //Current lat point converted to radians
                     double lon1 = Math.toRadians(missile.getLon()); //Current lon point converted to radians
@@ -101,18 +112,21 @@ public class Server {
             }
         }, 100, 100, TimeUnit.MILLISECONDS);
         
+        //calculate distance between missiles and ships
         scheduler.scheduleAtFixedRate(new Runnable() {
             ClientWorker fireID;
             ClientWorker hitedID;
             @Override
             public void run() {
+                //loop missiles
                 for (Missile missile : missileList) {
                     executor.execute(() -> {
                         int missileID = missile.getID();
+                        //loop ships for each missile
                         shipList.forEach((k, v) -> {
-
+                            //check if it is not own missile
                             if (!k.equals(Integer.toString(missileID))) {
-
+                                //calculate distance
                                 double lat1 = Math.toRadians(missile.getLat());
                                 double lon1 = Math.toRadians(missile.getLon());
 
@@ -168,8 +182,10 @@ public class Server {
                                 }
                             }
                         });
+                        //check missile's life if old remove
                         if (ChronoUnit.MINUTES.between(missile.getLife(), LocalTime.now()) >= 5 * 60) {
                             missileList.remove(missile);
+                            missile = null;
                             System.out.println("removed:" + missile);
                         }
                     });
@@ -177,6 +193,7 @@ public class Server {
             }
         }, 100, 100, TimeUnit.MILLISECONDS);
         
+        //check online clients
         scheduler.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
@@ -186,9 +203,9 @@ public class Server {
         }, 10, 10, TimeUnit.SECONDS);
 
         System.out.println("Starting Sever Socket");
-
+        //listen for incoming request on defined port
         try{
-            server = new ServerSocket(57349, 10000);
+            server = new ServerSocket(57348, 10000);
             System.out.println("Waiting for a client...");
 
         } catch (IOException e) {
@@ -198,7 +215,7 @@ public class Server {
             clientPool.shutdownNow();
             System.exit(-1);
         }
-
+        //accept incoming requests. Create new socket in separete thread
         while(true) {
 
             ClientWorker w;

@@ -22,7 +22,7 @@ public class ClientWorker implements Runnable {
     private final static String missile = "missile";
     private final static String missileArray = "missileArray";
     private final static String shield = "shield";
-    final static String points = "points";
+    private final static String points = "points";
     private ArrayList<String> line;
     private ArrayList<String> response;
     private Fishies db;
@@ -204,7 +204,6 @@ public class ClientWorker implements Runnable {
 
         } catch (Exception e) {
             System.out.println("disconnected " + e);
-            botScheduler.shutdownNow();
         }
         finally {
             try {
