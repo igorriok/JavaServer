@@ -5,14 +5,11 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 
-import javax.net.ssl.SSLServerSocket;
 import java.io.*;
 import java.net.*;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.*;
 
 import static java.lang.Math.*;
@@ -46,7 +43,7 @@ public class Server {
         //Server socket
         ServerSocket server = null;
 
-        //fot testing
+        //for testing
         /**shipList.put("north", new Ship("neo", 47.5, 28.8827, LocalTime.now(), 0));
         shipList.put("south", new Ship("solo", 46.5, 28.8827, LocalTime.now(), 0));
         shipList.put("west", new Ship("winston", 47, 28.1, LocalTime.now(), 0));
@@ -59,26 +56,22 @@ public class Server {
         db.run();
 
         //check ships' lifes, if old remove from list
-        scheduler.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
+        scheduler.scheduleAtFixedRate(() -> {
 
-                System.out.println("checking lifes" + shipList.toString());
-                //loop ships to check lifes
-                shipList.forEach((k, v) -> {
-                    System.out.println(k + " last update " + ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()) + " minutes ago");
-                    if (ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()) >= 5) {
-                        shipList.remove(k);
-                        v = null;
-                        System.out.println("removed:" + k);
-                    }
-                });
-            }
-        }, 0, 60, TimeUnit.SECONDS);
+            System.out.println("checking lifes" + shipList.toString());
+            //loop ships to check lifes
+            shipList.forEach((k, v) -> {
+                System.out.println(k + " last update " + ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()) + " minutes ago");
+                if (ChronoUnit.MINUTES.between(v.getLife(), LocalTime.now()) >= 5) {
+                    shipList.remove(k);
+                    System.out.println("removed:" + k);
+                }
+            });
+        }, 60, 60, TimeUnit.SECONDS);
 
         //check explosions lifes if old remove
         scheduler.scheduleAtFixedRate(() -> {
-            //loop explosions to ckeck lifes
+            //loop explosions to check lifes
             for (Explosion exp : expList) {
                 if (ChronoUnit.SECONDS.between(exp.getLife(), LocalTime.now()) >= 2) {
                     expList.remove(exp);
@@ -88,38 +81,36 @@ public class Server {
         }, 500, 500, TimeUnit.MILLISECONDS);
 
         //calculate new location for missiles
-        scheduler.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                //loop missiles and write new location
-                for(Missile missile : missileList) {
+        scheduler.scheduleAtFixedRate(() -> {
+            //loop missiles and write new location
+            for(Missile missile : missileList) {
 
-                    double bearing = Math.toRadians(missile.getBearing()); //Bearing in degrees converted to radians.
+                double bearing = Math.toRadians(missile.getBearing()); //Bearing in degrees converted to radians.
 
-                    double lat1 = Math.toRadians(missile.getLat()); //Current lat point converted to radians
-                    double lon1 = Math.toRadians(missile.getLon()); //Current lon point converted to radians
+                double lat1 = Math.toRadians(missile.getLat()); //Current lat point converted to radians
+                double lon1 = Math.toRadians(missile.getLon()); //Current lon point converted to radians
 
-                    double lat2 = Math.asin( sin(lat1) * cos(d/R) + cos(lat1) * sin(d/R) * cos(bearing));
+                double lat2 = Math.asin( sin(lat1) * cos(d/R) + cos(lat1) * sin(d/R) * cos(bearing));
 
-                    double lon2 = lon1 + Math.atan2(sin(bearing) * sin(d/R) * cos(lat1), cos(d/R) - sin(lat1) * sin(lat2));
+                double lon2 = lon1 + Math.atan2(sin(bearing) * sin(d/R) * cos(lat1), cos(d/R) - sin(lat1) * sin(lat2));
 
-                    lat2 = Math.toDegrees(lat2);
-                    lon2 = Math.toDegrees(lon2);
+                lat2 = Math.toDegrees(lat2);
+                lon2 = Math.toDegrees(lon2);
 
-                    missile.setLat(lat2);
-                    missile.setLon(lon2);
-                }
+                missile.setLat(lat2);
+                missile.setLon(lon2);
             }
         }, 100, 100, TimeUnit.MILLISECONDS);
         
         //calculate distance between missiles and ships
         scheduler.scheduleAtFixedRate(new Runnable() {
-            ClientWorker fireID;
-            ClientWorker hitedID;
+            ClientWorker firedClient;
+            ClientWorker hitedClient;
             @Override
             public void run() {
                 //loop missiles
-                for (Missile missile : missileList) {
+                for (Missile mis : missileList) {
+                    final Missile missile = mis;
                     executor.execute(() -> {
                         int missileID = missile.getID();
                         //loop ships for each missile
@@ -159,23 +150,23 @@ public class Server {
                                         //update points
                                         db.updatePoints(missileID, 1);
                                         //notify participants of hit
-                                        hitedID = clients.get(k);
-                                        fireID = clients.get(Integer.toString(missileID));
+                                        hitedClient = clients.get(k);
+                                        firedClient = clients.get(Integer.toString(missileID));
                                         //create points update message to be sent to fired client
-                                        if (fireID != null) {
+                                        if (firedClient != null) {
                                             ArrayList<String> message = new ArrayList<>();
                                             message.add(ClientWorker.points);
                                             message.add(Integer.toString(db.getPointsByID(missileID)));
                                             message.add(v.getName());
                                             //send points through clientWorker by ID
-                                            fireID.sendMessage(message);
+                                            firedClient.sendMessage(message);
 
                                             //create notification message to be sent to stricken player
-                                            if (hitedID != null) {
+                                            if (hitedClient != null) {
                                                 ArrayList<String> hit = new ArrayList<>();
                                                 hit.add("hit");
-                                                hit.add((shipList.get(fireID)).getName());
-                                                hitedID.sendMessage(hit);
+                                                hit.add((shipList.get(Integer.toString(missileID))).getName());
+                                                hitedClient.sendMessage(hit);
                                             }
                                         }
                                     }
@@ -185,22 +176,15 @@ public class Server {
                         //check missile's life if old remove
                         if (ChronoUnit.MINUTES.between(missile.getLife(), LocalTime.now()) >= 5 * 60) {
                             missileList.remove(missile);
-                            missile = null;
                             System.out.println("removed:" + missile);
                         }
                     });
                 }
             }
         }, 100, 100, TimeUnit.MILLISECONDS);
-        
+
         //check online clients
-        scheduler.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-              
-                System.out.println("Online clients:" + clients.size());
-            }
-        }, 10, 10, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(() -> System.out.println("Online clients:" + clients.size()), 10, 10, TimeUnit.SECONDS);
 
         System.out.println("Starting Sever Socket");
         //listen for incoming request on defined port
