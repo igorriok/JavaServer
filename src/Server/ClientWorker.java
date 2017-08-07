@@ -124,7 +124,7 @@ public class ClientWorker implements Runnable {
                             break;
                         case id:
                             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
-                                .setAudience(Collections.singletonList("653188213597-jll3ngrpn5b91b1ghn1vdnqhs3bi45s0.apps.googleusercontent.com"))
+                                .setAudience(Collections.singletonList(GoogleClientID))
                                 // Or, if multiple clients access the backend:
                                 //.setAudience(Arrays.asList(CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3))
                                 .build();
