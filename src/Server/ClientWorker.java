@@ -22,7 +22,7 @@ public class ClientWorker implements Runnable {
     private final static String missile = "missile";
     private final static String missileArray = "missileArray";
     private final static String shield = "shield";
-    private final static String points = "points";
+    final static String points = "points";
     private ArrayList<String> line;
     private ArrayList<String> response;
     private Fishies db;
@@ -63,6 +63,7 @@ public class ClientWorker implements Runnable {
         this.jsonFactory = jsonFactory;
     }
 
+    @Override
     public void run() {
 
         ObjectInputStream in = null;
@@ -142,6 +143,7 @@ public class ClientWorker implements Runnable {
                                 response = new ArrayList<>();
                                 //add id head
                                 response.add(id);
+                                //get ID from database
                                 ID = db.getID(userId);
                                 //add db ID
                                 response.add(Integer.toString(ID));
@@ -215,6 +217,8 @@ public class ClientWorker implements Runnable {
                 System.out.println("Client closed");
             } catch (IOException ioe) {
                 System.out.println("cant stoop client");
+            } catch (NullPointerException e) {
+                System.out.println("in cant be closed:" + e);
             }
         }
     }
