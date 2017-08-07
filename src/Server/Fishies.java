@@ -14,6 +14,7 @@ public class Fishies extends Thread {
     public void run() {
         try {
             conn = DriverManager.getConnection(Entries.url);
+            System.out.println("Connected to database");
             Statement stmt = conn.createStatement();
             // create a new table
             stmt.execute(Entries.sql);
@@ -24,15 +25,15 @@ public class Fishies extends Thread {
 
     /**
      * Insert a new row into the warehouses table
-     * @param token received from app
+     * @param userID received from app
      * @param points default is 0
      */
-    private void insert(String token, int points) {
+    private synchronized void insert(String userID, int points) {
 
         String sql = "INSERT INTO " + Entries.TABLE_NAME + "(" + Entries.PET_TOKEN + "," + Entries.PET_POINTS + ") VALUES(?,?);";
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
-            pstmt.setString(1, token);
+            pstmt.setString(1, userID);
             pstmt.setDouble(2, points);
             pstmt.executeUpdate();
         } catch (SQLException e) {
@@ -40,7 +41,7 @@ public class Fishies extends Thread {
         }
     }
     
-    void updatePoints(int ID, int points) {
+    synchronized void updatePoints(int ID, int points) {
         String sql = "SELECT " + Entries.PET_POINTS + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_ID + " = ?;";
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -61,20 +62,20 @@ public class Fishies extends Thread {
         }
     }
 
-    int getID(String token) {
+    synchronized int getID(String userID) {
         int ID = 0;
         String sql = "SELECT * " + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_TOKEN + " = ?;";
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
-            pstmt.setString(1, token);
+            pstmt.setString(1, userID);
             ResultSet rs = pstmt.executeQuery();
             ID = rs.getInt(Entries.PET_ID);
         } catch (SQLException e) {
             System.out.println("No such record " + e.getMessage());
-            insert(token, 0);
+            insert(userID, 0);
             try {
                 PreparedStatement pstmt = conn.prepareStatement(sql);
-                pstmt.setString(1, token);
+                pstmt.setString(1, userID);
                 ResultSet rs = pstmt.executeQuery();
                 ID = rs.getInt(Entries.PET_ID);
             } catch (SQLException error) {
@@ -84,7 +85,7 @@ public class Fishies extends Thread {
         return ID;
     }
 
-    int getPointsByID(int ID) {
+    synchronized int getPointsByID(int ID) {
         int points = 0;
         String sql = "SELECT * " + " FROM " + Entries.TABLE_NAME + " WHERE " + Entries.PET_ID + " = ?;";
         try {
