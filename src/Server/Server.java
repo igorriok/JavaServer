@@ -80,7 +80,7 @@ public class Server {
             }
         }, 500, 500, TimeUnit.MILLISECONDS);
 
-        //calculate new location for missiles
+        //calculate next location for missiles
         scheduler.scheduleAtFixedRate(() -> {
             //loop missiles and write new location
             for(Missile missile : missileList) {
@@ -189,19 +189,15 @@ public class Server {
         System.out.println("Starting Sever Socket");
         //listen for incoming request on defined port
         try{
-            server = new ServerSocket(57348, 10000);
+            server = new ServerSocket(57349, 1000);
             System.out.println("Waiting for a client...");
 
         } catch (IOException e) {
-            System.out.println("Could not listen on port");
-            scheduler.shutdownNow();
-            executor.shutdownNow();
-            clientPool.shutdownNow();
+            System.out.println("Could not listen on port:" + e);
             System.exit(-1);
         }
         //accept incoming requests. Create new socket in separete thread
         while(true) {
-
             ClientWorker w;
             try {
                 //server.accept returns a client connection

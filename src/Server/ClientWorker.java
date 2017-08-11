@@ -31,10 +31,11 @@ public class ClientWorker implements Runnable {
     private ConcurrentHashMap<String, ClientWorker> clients;
     private ConcurrentLinkedQueue<Explosion> expList;
     private ObjectOutputStream out;
-    private int ID = 0;
+    private int ID;
     private HttpTransport transport;
     private JsonFactory jsonFactory;
-    private Double botLat, botLong;
+    private String threadName;
+    ScheduledExecutorService botScheduler;
 
 
     //Constructor
@@ -63,6 +64,15 @@ public class ClientWorker implements Runnable {
         this.jsonFactory = jsonFactory;
     }
 
+    private void addBot(double lat, double lang) {
+        Random rnd = new Random();
+        int botNr = rnd.nextInt(1000000);
+        botScheduler.scheduleAtFixedRate(() -> shipsHashMap.put(botNr + "", new Ship("Bot-" + botNr,
+                        lat + ThreadLocalRandom.current().nextDouble(-0.3, 0.3),
+                        lang + ThreadLocalRandom.current().nextDouble(-0.3, 0.3), LocalTime.now(), 0)),
+                0, 5 * 60, TimeUnit.SECONDS);
+    }
+
     @Override
     public void run() {
 
@@ -71,17 +81,10 @@ public class ClientWorker implements Runnable {
 
         System.out.println("Client running");
 
-        Random rnd = new Random();
-        int botNr = rnd.nextInt(1000000);
+        //Add this ClientWorker to list
+        //threadName = Thread.currentThread().getName();
         
-        ScheduledExecutorService botScheduler = Executors.newScheduledThreadPool(1);
-        botScheduler.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                shipsHashMap.put(botNr + "", new Ship("Bot-" + botNr, botLat + rnd.nextInt(1),
-                        botLong + rnd.nextInt(1), LocalTime.now(), 0));
-            }
-        }, 30, 5 * 60, TimeUnit.SECONDS);
+        botScheduler = Executors.newScheduledThreadPool(1);
 
         try {
             in = new ObjectInputStream(client.getInputStream());
@@ -98,15 +101,17 @@ public class ClientWorker implements Runnable {
                     switch (head) {
                         case shipMsg:
                             if (shipsHashMap.containsKey(line.get(1))) {
+                                //replace this ship (id, Ship)
                                 shipsHashMap.replace(line.get(1), new Ship(line.get(2), Double.parseDouble(line.get(3)),
                                         Double.parseDouble(line.get(4)), LocalTime.now(), Double.parseDouble(line.get(5))));
                                 //System.out.println("Client Worker: updated ship:" + line.get(1));
                             } else {
+                                //add this ship (id, Ship)
                                 shipsHashMap.put(line.get(1), new Ship(line.get(2), Double.parseDouble(line.get(3)),
                                         Double.parseDouble(line.get(4)), LocalTime.now(), Double.parseDouble(line.get(5))));
                                 //System.out.println("Client Worker: Added ship:" + line.get(1));
-                                botLat = Double.parseDouble(line.get(3));
-                                botLong = Double.parseDouble(line.get(4));
+                                //set lat, long for bot
+                                addBot(Double.parseDouble(line.get(3)), Double.parseDouble(line.get(4)));
                             }
 
                             response = new ArrayList<>();
@@ -125,7 +130,7 @@ public class ClientWorker implements Runnable {
                             break;
                         case id:
                             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
-                                .setAudience(Collections.singletonList(GoogleClientID))
+                                .setAudience(Collections.singletonList("653188213597-vtktdjdlgo929m83vvhesq7rvtpgkngt.apps.googleusercontent.com"))
                                 // Or, if multiple clients access the backend:
                                 //.setAudience(Arrays.asList(CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3))
                                 .build();
@@ -145,11 +150,11 @@ public class ClientWorker implements Runnable {
                                 response.add(id);
                                 //get ID from database
                                 ID = db.getID(userId);
+                                //add this thread to clients list
+                                clients.put(Integer.toString(ID), this);
                                 //add db ID
                                 response.add(Integer.toString(ID));
                                 sendMessage(response);
-                                //Add this ClientWorker to list of clients
-                                clients.put(Integer.toString(ID), this);
                                 System.out.println("Sent: " + response.toString());
                                 //make points response
                                 response = new ArrayList<>();
@@ -213,7 +218,7 @@ public class ClientWorker implements Runnable {
                 out.close();
                 client.close();
                 botScheduler.shutdownNow();
-                clients.remove(Integer.toString(ID));
+                clients.remove(threadName);
                 System.out.println("Client closed");
             } catch (IOException ioe) {
                 System.out.println("cant stoop client");
