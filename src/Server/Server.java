@@ -20,7 +20,7 @@ public class Server {
     public static void main(String[] args) throws IOException {
 
         double R = 6378.1; //Radius of the Earth km
-        double d = 0.05; //2000km/h
+        double d = 0.1; //4000km/h
         //list of missiles
         ConcurrentLinkedQueue<Missile> missileList  = new ConcurrentLinkedQueue<Missile>();
         //list of Ships
@@ -147,18 +147,18 @@ public class Server {
                                     if (!v.getShield()) {
                                         //add explosion to list
                                         expList.add(new Explosion(missileID, missile.getLat(), missile.getLon(), LocalTime.now()));
-                                        //update points
+                                        //update POINTS
                                         db.updatePoints(missileID, 1);
                                         //notify participants of hit
                                         hitedClient = clients.get(k);
                                         firedClient = clients.get(Integer.toString(missileID));
-                                        //create points update message to be sent to fired client
+                                        //create POINTS update message to be sent to fired client
                                         if (firedClient != null) {
                                             ArrayList<String> message = new ArrayList<>();
-                                            message.add(ClientWorker.points);
+                                            message.add(ClientWorker.POINTS);
                                             message.add(Integer.toString(db.getPointsByID(missileID)));
                                             message.add(v.getName());
-                                            //send points through clientWorker by ID
+                                            //send POINTS through clientWorker by ID
                                             firedClient.sendMessage(message);
 
                                             //create notification message to be sent to stricken player
