@@ -133,7 +133,7 @@ public class ClientWorker implements Runnable {
                         case ID:
                             System.out.println("internalID");
                             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
-                                .setAudience(Collections.singletonList("653188213597-vtktdjdlgo929m83vvhesq7rvtpgkngt.apps.googleusercontent.com"))
+                                .setAudience(Collections.singletonList(""))
                                 // Or, if multiple clients access the backend:
                                 //.setAudience(Arrays.asList(CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3))
                                 .build();
