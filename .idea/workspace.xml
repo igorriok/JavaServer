@@ -8,8 +8,6 @@
   <component name="ChangeListManager">
     <list default="true" id="3c59e093-04fd-420a-9feb-ca39fd3dc5ca" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Server/ClientWorker.java" afterPath="$PROJECT_DIR$/src/Server/ClientWorker.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Server/Server.java" afterPath="$PROJECT_DIR$/src/Server/Server.java" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -107,7 +105,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="master" />
+        <entry key="$PROJECT_DIR$" value="AllInOne" />
       </map>
     </option>
   </component>
@@ -527,7 +525,7 @@
       <workItem from="1502304076320" duration="768000" />
       <workItem from="1502304866316" duration="8014000" />
       <workItem from="1502472371263" duration="28220000" />
-      <workItem from="1502816078973" duration="10507000" />
+      <workItem from="1502816078973" duration="10651000" />
     </task>
     <task id="LOCAL-00001" summary="MultiThread">
       <created>1488028897036</created>
@@ -739,11 +737,18 @@
       <option name="project" value="LOCAL" />
       <updated>1502578003185</updated>
     </task>
-    <option name="localTasksCounter" value="31" />
+    <task id="LOCAL-00031" summary="fixed connection">
+      <created>1503077972389</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1503077972389</updated>
+    </task>
+    <option name="localTasksCounter" value="32" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="66422000" />
+    <option name="totallyTimeSpent" value="66566000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
