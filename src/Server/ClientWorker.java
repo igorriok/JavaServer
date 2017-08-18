@@ -25,8 +25,8 @@ public class ClientWorker implements Runnable {
     private final static String MISSILE_ARRAY = "MISSILE_ARRAY";
     private final static String SHIELD = "SHIELD";
     final static String POINTS = "POINTS";
-    private ArrayList<String> line;
-    private ArrayList<String> response;
+    //private ArrayList<String> line;
+    //private ArrayList<String> response;
     private Fishies db;
     private ConcurrentHashMap<String, Ship> shipsHashMap;
     private ConcurrentLinkedQueue<Missile> missileList;
@@ -37,7 +37,8 @@ public class ClientWorker implements Runnable {
     private HttpTransport transport;
     private JsonFactory jsonFactory;
     private String threadName;
-    private ScheduledExecutorService botScheduler = Executors.newScheduledThreadPool(1);;
+    private ScheduledExecutorService botScheduler = Executors.newScheduledThreadPool(1);
+    ConcurrentLinkedQueue<Thread> threadList;
 
 
     //Constructor
@@ -61,21 +62,32 @@ public class ClientWorker implements Runnable {
         }
     }
     
-    public void setGoogleCon(HttpTransport transport, JsonFactory jsonFactory) {
+    void setGoogleCon(HttpTransport transport, JsonFactory jsonFactory) {
         this.transport = transport;
         this.jsonFactory = jsonFactory;
     }
 
     private void addBot(double lat, double lang) {
-        Random rnd = new Random();
-        int botNr = rnd.nextInt(1000000);
-        botScheduler.scheduleAtFixedRate(() -> shipsHashMap.put(botNr + "", new Ship("Bot-" + botNr,
-                        lat + ThreadLocalRandom.current().nextDouble(-0.3, 0.3),
-                        lang + ThreadLocalRandom.current().nextDouble(-0.3, 0.3), LocalTime.now(), 0)),
-                0, 301, SECONDS);
+        try {
+            Random rnd = new Random();
+            int botNr = rnd.nextInt(1000000);
+            botScheduler.scheduleAtFixedRate(() -> {
+                if (!shipsHashMap.containsKey(Integer.toString(internalID))) {
+                    botScheduler.shutdownNow();
+                } else {
+                    shipsHashMap.put(botNr + "", new Ship("Bot-" + botNr,
+                            lat + ThreadLocalRandom.current().nextDouble(-0.3, 0.3),
+                            lang + ThreadLocalRandom.current().nextDouble(-0.3, 0.3), LocalTime.now(), 0));
+                }
+            }, 0, 301, SECONDS);
+        } catch (Exception e) {
+            botScheduler.shutdownNow();
+            System.out.println("Error on bot scheduler: "+ e);
+        }
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void run() {
 
         ObjectInputStream in;
@@ -83,6 +95,7 @@ public class ClientWorker implements Runnable {
 
         System.out.println("Client running");
 
+        ArrayList<String> response;
         //Add this ClientWorker to list
         //threadName = Thread.currentThread().getName();
         
@@ -94,6 +107,7 @@ public class ClientWorker implements Runnable {
             System.out.println("in and out created");
 
             System.out.println("Waiting for messages");
+            ArrayList<String> line;
 
             while((line = (ArrayList) in.readObject()) != null) {
 
@@ -214,8 +228,7 @@ public class ClientWorker implements Runnable {
 
         } catch (Exception e) {
             System.out.println("disconnected " + e);
-        }
-        finally {
+        } finally {
             try {
                 out.close();
                 client.close();
@@ -224,8 +237,6 @@ public class ClientWorker implements Runnable {
                 System.out.println("Client closed");
             } catch (IOException ioe) {
                 System.out.println("cant stoop client");
-            } catch (NullPointerException e) {
-                System.out.println("in cant be closed:" + e);
             }
         }
     }

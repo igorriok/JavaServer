@@ -22,13 +22,13 @@ public class Server {
         double R = 6378.1; //Radius of the Earth km
         double d = 0.1; //4000km/h
         //list of missiles
-        ConcurrentLinkedQueue<Missile> missileList  = new ConcurrentLinkedQueue<Missile>();
+        ConcurrentLinkedQueue<Missile> missileList  = new ConcurrentLinkedQueue<>();
         //list of Ships
-        ConcurrentHashMap<String, Ship> shipList = new ConcurrentHashMap<String, Ship>();
+        ConcurrentHashMap<String, Ship> shipList = new ConcurrentHashMap<>();
         //list of socket clients
         ConcurrentHashMap<String, ClientWorker> clients = new ConcurrentHashMap<>();
         //list of explosions
-        ConcurrentLinkedQueue<Explosion> expList  = new ConcurrentLinkedQueue<Explosion>();
+        ConcurrentLinkedQueue<Explosion> expList  = new ConcurrentLinkedQueue<>();
         //hit radius in km
         double hitRadius = 0.05;
         //executor for distance calculation tasks
@@ -42,14 +42,6 @@ public class Server {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
         //Server socket
         ServerSocket server = null;
-
-        //for testing
-        /**shipList.put("north", new Ship("neo", 47.5, 28.8827, LocalTime.now(), 0));
-        shipList.put("south", new Ship("solo", 46.5, 28.8827, LocalTime.now(), 0));
-        shipList.put("west", new Ship("winston", 47, 28.1, LocalTime.now(), 0));
-        shipList.put("est", new Ship("elle", 47, 29.6, LocalTime.now(), 0));
-        shipList.put("colonita", new Ship("colonita", 47.040885, 28.947728, LocalTime.now(), 0));
-        */
 
         //initialize database thread
         Fishies db = new Fishies();
@@ -73,12 +65,21 @@ public class Server {
         scheduler.scheduleAtFixedRate(() -> {
             //loop explosions to check lifes
             for (Explosion exp : expList) {
-                if (ChronoUnit.SECONDS.between(exp.getLife(), LocalTime.now()) >= 2) {
+                if (ChronoUnit.SECONDS.between(exp.getLife(), LocalTime.now()) >= 3) {
                     expList.remove(exp);
                     System.out.println("removed:" + exp);
                 }
             }
         }, 500, 500, TimeUnit.MILLISECONDS);
+      
+        scheduler.scheduleAtFixedRate(() -> {
+            //loop 
+            clients.forEach((k, v) -> {
+                if (!shipList.containsKey(k)) {
+                    clients.remove(k);
+                }
+            });
+        }, 1000, 1000, TimeUnit.MILLISECONDS);
 
         //calculate next location for missiles
         scheduler.scheduleAtFixedRate(() -> {
@@ -160,14 +161,13 @@ public class Server {
                                             message.add(v.getName());
                                             //send POINTS through clientWorker by ID
                                             firedClient.sendMessage(message);
-
-                                            //create notification message to be sent to stricken player
-                                            if (hitedClient != null) {
-                                                ArrayList<String> hit = new ArrayList<>();
-                                                hit.add("hit");
-                                                hit.add((shipList.get(Integer.toString(missileID))).getName());
-                                                hitedClient.sendMessage(hit);
-                                            }
+                                        }
+                                        //create notification message to be sent to stricken player
+                                        if (hitedClient != null) {
+                                            ArrayList<String> hit = new ArrayList<>();
+                                            hit.add("hit");
+                                            hit.add((shipList.get(Integer.toString(missileID))).getName());
+                                            hitedClient.sendMessage(hit);
                                         }
                                     }
                                 }
@@ -184,7 +184,7 @@ public class Server {
         }, 100, 100, TimeUnit.MILLISECONDS);
 
         //check online clients
-        scheduler.scheduleAtFixedRate(() -> System.out.println("Online clients:" + clients.size()), 10, 10, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(() -> System.out.println("Running clients:" + clients.size()), 10, 10, TimeUnit.SECONDS);
 
         System.out.println("Starting Sever Socket");
         //listen for incoming request on defined port
